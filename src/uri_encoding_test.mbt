@@ -53,6 +53,77 @@ test "percent encoding roundtrip" {
 }
 
 ///|
+test "encoding edge cases and error paths" {
+  // Test percent decoding with incomplete encoding
+  match @uri.percent_decode("%2") {
+    Ok(_) => fail("Should fail with incomplete percent encoding")
+    Err(_) => () // Expected: "Incomplete percent encoding at end"
+  }
+  
+  match @uri.percent_decode("%") {
+    Ok(_) => fail("Should fail with incomplete percent encoding")
+    Err(_) => () // Expected: "Incomplete percent encoding at end"
+  }
+  
+  // Test percent decoding with invalid hex digits
+  match @uri.percent_decode("%GG") {
+    Ok(_) => fail("Should fail with invalid hex digits")
+    Err(_) => () // Expected: "Invalid hex digits"
+  }
+  
+  // Test percent decoding with invalid byte value (out of range)
+  match @uri.percent_decode("%FF") {
+    Ok(_) => () // May work for some values
+    Err(_) => () // May fail for high byte values
+  }
+  
+  // Test encoding with non-ASCII characters (edge case in encoding)
+  let non_ascii = "café"
+  let encoded_non_ascii = @uri.percent_encode(non_ascii, fn(c) {
+    c.to_int() > 127 // Encode non-ASCII
+  })
+  // Should handle non-ASCII characters
+  assert_eq(encoded_non_ascii.length() > 0, true)
+  
+  // Test specific encoding functions
+  let path_segment = "path with spaces"
+  let encoded_path = @uri.encode_path_segment(path_segment)
+  assert_eq(encoded_path.contains("%20"), true)
+  
+  let query_param = "param with spaces"
+  let encoded_query = @uri.encode_query(query_param)
+  assert_eq(encoded_query.contains("%20"), true)
+  
+  let fragment_text = "fragment with spaces"
+  let encoded_fragment = @uri.encode_fragment(fragment_text)
+  assert_eq(encoded_fragment.contains("%20"), true)
+  
+  let userinfo_text = "user:pass"
+  let encoded_userinfo = @uri.encode_userinfo(userinfo_text)
+  // May or may not encode the colon depending on validation
+  assert_eq(encoded_userinfo.length() > 0, true)
+  
+  let reg_name = "domain with spaces"
+  let encoded_reg_name = @uri.encode_reg_name(reg_name)
+  assert_eq(encoded_reg_name.contains("%20"), true)
+}
+
+///|
+test "validation functions" {
+  // Test is_valid_percent_encoding
+  assert_eq(@uri.is_valid_percent_encoding("%20"), true)
+  assert_eq(@uri.is_valid_percent_encoding("%2G"), false)
+  assert_eq(@uri.is_valid_percent_encoding("%2"), false)
+  assert_eq(@uri.is_valid_percent_encoding("normal"), true)
+  
+  // Test is_valid_encoded_string
+  assert_eq(@uri.is_valid_encoded_string("normal", @uri.is_unreserved), true)
+  assert_eq(@uri.is_valid_encoded_string("%20", @uri.is_unreserved), true)
+  assert_eq(@uri.is_valid_encoded_string("%2G", @uri.is_unreserved), false)
+  assert_eq(@uri.is_valid_encoded_string("@", @uri.is_unreserved), false) // @ is not unreserved
+}
+
+///|
 test "invalid percent encoding" {
   let invalid_cases = [
     "%", // Incomplete

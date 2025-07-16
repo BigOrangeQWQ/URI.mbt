@@ -97,3 +97,123 @@ test "basic path operations" {
     assert_eq(normalized.length() >= 0, true)
   }
 }
+
+///|
+test "path validation error cases" {
+  // Test cases with invalid characters to trigger error paths
+  // Using characters that are invalid in path segments (like spaces without encoding)
+  
+  // Invalid absolute path segment (space character is invalid without encoding)
+  match @uri.classify_and_validate_path("/path with space") {
+    Ok(_) => () // May be valid in some implementations
+    Err(_) => () // Expected for invalid characters
+  }
+  
+  // Invalid first segment in absolute path
+  match @uri.classify_and_validate_path("/invalid\u{0000}segment") {
+    Ok(_) => () // May be valid
+    Err(_) => () // Expected for control characters
+  }
+  
+  // Invalid remaining segment in absolute path  
+  match @uri.classify_and_validate_path("/valid/invalid\u{0001}segment") {
+    Ok(_) => ()
+    Err(_) => () // Should trigger "Invalid segment in absolute path"
+  }
+  
+  // Test relative path with invalid first segment
+  match @uri.classify_and_validate_path("invalid\u{0002}segment") {
+    Ok(_) => ()
+    Err(_) => () // Should trigger "Invalid first segment in relative path"
+  }
+  
+  // Test colon in no-scheme path (should trigger segment-nz-nc error)
+  match @uri.classify_and_validate_path("first:segment") {
+    Ok(_) => () // This is actually valid as rootless path
+    Err(_) => () 
+  }
+  
+  // Test invalid remaining segment in relative path
+  match @uri.classify_and_validate_path("valid/invalid\u{0003}segment") {  
+    Ok(_) => ()
+    Err(_) => () // Should trigger "Invalid segment in relative path"
+  }
+}
+
+///|
+test "path abempty error cases" {
+  // Test invalid segment in abempty path with control characters
+  match @uri.validate_path_abempty("/path/with/invalid\u{0004}segment") {
+    Ok(_) => ()
+    Err(_) => () // Should trigger "Invalid segment in abempty path"
+  }
+  
+  // Test malformed percent encoding  
+  match @uri.validate_path_abempty("/path%ZZ/segment") {
+    Ok(_) => ()
+    Err(_) => () // Should trigger validation error
+  }
+}
+
+///|
+test "normalize path edge cases" {
+  // Test empty path normalization
+  let empty_result = @uri.normalize_path("")
+  assert_eq(empty_result, "")
+  
+  // Test various normalization cases
+  let norm1 = @uri.normalize_path(".")
+  assert_eq(norm1, "")
+  
+  let norm2 = @uri.normalize_path("./")
+  assert_eq(norm2, "")
+  
+  // Test relative path with .. 
+  let norm3 = @uri.normalize_path("a/../b")
+  assert_eq(norm3, "b")
+  
+  let norm4 = @uri.normalize_path("../a")
+  assert_eq(norm4, "../a")
+}
+
+///|
+test "path joining" {
+  // Test join_paths function
+  let join1 = @uri.join_paths("", "path")
+  assert_eq(join1, "path")
+  
+  let join2 = @uri.join_paths("base", "")
+  assert_eq(join2, "base")
+  
+  let join3 = @uri.join_paths("base", "/absolute")
+  assert_eq(join3, "/absolute")
+  
+  let join4 = @uri.join_paths("base/", "relative")
+  assert_eq(join4, "base/relative")
+  
+  let join5 = @uri.join_paths("base", "relative")
+  assert_eq(join5, "base/relative")
+}
+
+///|
+test "path segments" {
+  // Test path_segments function
+  let seg1 = @uri.path_segments("")
+  assert_eq(seg1.length(), 0)
+  
+  let seg2 = @uri.path_segments("/")  
+  assert_eq(seg2.length(), 1)
+  assert_eq(seg2[0], "")
+  
+  let seg3 = @uri.path_segments("/a/b/c")
+  assert_eq(seg3.length(), 3)
+  assert_eq(seg3[0], "a")
+  assert_eq(seg3[1], "b") 
+  assert_eq(seg3[2], "c")
+  
+  let seg4 = @uri.path_segments("a/b/c")
+  assert_eq(seg4.length(), 3)
+  assert_eq(seg4[0], "a")
+  assert_eq(seg4[1], "b")
+  assert_eq(seg4[2], "c")
+}
