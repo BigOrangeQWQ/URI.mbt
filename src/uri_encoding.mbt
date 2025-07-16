@@ -1,7 +1,7 @@
 /// Percent-encoding and decoding utilities based on RFC 3986
 
 ///| Check if a string contains valid percent-encoding
-/// pct-encoded = "%" HEXDIG HEXDIG
+/// pct-encoded = "%" HEXDIG HEXDIG 
 pub fn is_valid_percent_encoding(s : String) -> Bool {
   let chars = s.to_array()
   let len = chars.length()
@@ -38,7 +38,8 @@ pub fn percent_decode(s : String) -> URIResult[String] {
             // Convert byte value back to character
             // Note: This is a simplified approach for ASCII characters
             if byte_val >= 0 && byte_val <= 127 {
-              result = result + byte_val.unsafe_to_char().to_string()
+              let char_result = byte_val.unsafe_to_char()
+              result = result + char_result.to_string()
               decode_from(i + 3)
             } else {
               Err(InvalidPercentEncoding("Invalid byte value: \{byte_val}"))
@@ -67,35 +68,20 @@ pub fn percent_decode(s : String) -> URIResult[String] {
 pub fn percent_encode(s : String, should_encode : (Char) -> Bool) -> String {
   let chars = s.to_array()
   let mut result = ""
+  
   for i = 0; i < chars.length(); i = i + 1 {
     let c = chars[i]
     if should_encode(c) {
-      let byte_val = Char::to_int(c)
+      let byte_val = c.to_int()
       if byte_val <= 255 {
         let h1 = byte_val / 16
         let h2 = byte_val % 16
         result = result + "%"
-        match int_to_hex(h1) {
-          Some(ch) => {
-            let upper_ch = if ch >= 'a' && ch <= 'f' {
-              (Char::to_int(ch) - 32).unsafe_to_char() // Convert to uppercase
-            } else {
-              ch
-            }
-            result = result + upper_ch.to_string()
+        match (int_to_hex(h1), int_to_hex(h2)) {
+          (Some(ch1), Some(ch2)) => {
+            result = result + ch1.to_string() + ch2.to_string()
           }
-          None => continue // Should not happen for valid bytes
-        }
-        match int_to_hex(h2) {
-          Some(ch) => {
-            let upper_ch = if ch >= 'a' && ch <= 'f' {
-              (Char::to_int(ch) - 32).unsafe_to_char() // Convert to uppercase  
-            } else {
-              ch
-            }
-            result = result + upper_ch.to_string()
-          }
-          None => continue // Should not happen for valid bytes
+          _ => continue // Should not happen for valid bytes
         }
       } else {
         // For non-ASCII characters, we'll just include them as-is

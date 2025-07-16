@@ -1,15 +1,6 @@
 /// IP address parsing utilities for IPv4, IPv6, and IPvFuture
 
-///| Simple integer parsing helper
-fn parse_int_simple(s : String) -> Int {
-  let chars = s.to_array()
-  let mut result = 0
-  for i = 0; i < chars.length(); i = i + 1 {
-    let digit = Char::to_int(chars[i]) - Char::to_int('0')
-    result = result * 10 + digit
-  }
-  result
-}
+
 
 ///| Parse a decimal octet (0-255)
 /// dec-octet = DIGIT / %x31-39 DIGIT / "1" 2DIGIT / "2" %x30-34 DIGIT / "25" %x30-35

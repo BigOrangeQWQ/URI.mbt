@@ -1,6 +1,6 @@
 /// Character classification functions based on RFC 3986 ABNF
 
-///| Check if character is an ASCII letter (A-Z, a-z)
+///| Check if character is an ASCII letter (A-Z, a-z)  
 fn is_alpha(c : Char) -> Bool {
   (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')
 }
@@ -100,7 +100,7 @@ pub fn hex_to_int(c : Char) -> Int? {
   }
 }
 
-///| Convert integer to hex character (lowercase)
+///| Convert integer to hex character (uppercase)
 pub fn int_to_hex(n : Int) -> Char? {
   if n >= 0 && n <= 15 {
     match n {
@@ -114,12 +114,12 @@ pub fn int_to_hex(n : Int) -> Char? {
       7 => Some('7')
       8 => Some('8')
       9 => Some('9')
-      10 => Some('a')
-      11 => Some('b')
-      12 => Some('c')
-      13 => Some('d')
-      14 => Some('e')
-      15 => Some('f')
+      10 => Some('A')
+      11 => Some('B')
+      12 => Some('C')
+      13 => Some('D')
+      14 => Some('E')
+      15 => Some('F')
       _ => None
     }
   } else {

@@ -1,31 +1,7 @@
 /// Authority component parsing
 /// authority = [ userinfo "@" ] host [ ":" port ]
 
-///| Find first occurrence of character in string
-fn find_char_in_string(s : String, c : Char) -> Int? {
-  let chars = s.to_array()
-  for i = 0; i < chars.length(); i = i + 1 {
-    if chars[i] == c {
-      return Some(i)
-    }
-  }
-  None
-}
 
-///| Find last occurrence of substring in string
-fn find_last_str_index(s : String, substr : String) -> Int? {
-  let s_len = s.length()
-  let substr_len = substr.length()
-  if substr_len == 0 || substr_len > s_len {
-    return None
-  }
-  for i = s_len - substr_len; i >= 0; i = i - 1 {
-    if s.substring(start=i, end=i + substr_len) == substr {
-      return Some(i)
-    }
-  }
-  None
-}
 
 ///| Parse port number: *DIGIT
 fn parse_port(s : String) -> URIResult[Int] {
@@ -73,7 +49,7 @@ pub fn parse_authority(s : String) -> URIResult[Authority] {
 
     // Check for userinfo (everything before '@')
     if s.contains("@") {
-      let at_pos = find_char_in_string(s, '@')
+      let at_pos = find_char_index(s, '@')
       match at_pos {
         Some(pos) => {
           let userinfo_str = s.substring(start=0, end=pos)
@@ -92,7 +68,7 @@ pub fn parse_authority(s : String) -> URIResult[Authority] {
     let mut port : Int? = None
     if host_port.has_prefix("[") {
       // IPv6 literal - find the closing bracket
-      match find_char_in_string(host_port, ']') {
+      match find_char_index(host_port, ']') {
         Some(bracket_pos) => {
           host_str = host_port.substring(start=0, end=bracket_pos + 1)
           let remaining = host_port.substring(start=bracket_pos + 1)
@@ -112,20 +88,14 @@ pub fn parse_authority(s : String) -> URIResult[Authority] {
       }
     } else {
       // Regular host - find last colon for port
-      let last_colon = find_last_str_index(host_port, ":")
+      let last_colon = find_last_index_str(host_port, ":")
       match last_colon {
         Some(colon_pos) => {
           // Check if this might be an IPv6 address without brackets
           // If there are multiple colons, it's likely IPv6
           let colon_count = {
-            let mut count = 0
             let chars = host_port.to_array()
-            for i = 0; i < chars.length(); i = i + 1 {
-              if chars[i] == ':' {
-                count += 1
-              }
-            }
-            count
+            chars.fold(init=0, fn(count, c) { if c == ':' { count + 1 } else { count } })
           }
           if colon_count == 1 {
             // Likely host:port

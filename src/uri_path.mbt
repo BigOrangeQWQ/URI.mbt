@@ -158,16 +158,14 @@ pub fn normalize_path(path : String) -> String {
 
 ///| Join two paths
 pub fn join_paths(base : String, path : String) -> String {
-  if path.has_prefix("/") {
-    // Absolute path replaces base
-    path
-  } else if base.is_empty() {
-    path
-  } else if path.is_empty() {
-    base
-  } else {
-    let normalized_base = if base.has_suffix("/") { base } else { base + "/" }
-    normalize_path(normalized_base + path)
+  match (base.is_empty(), path.is_empty(), path.has_prefix("/")) {
+    (_, _, true) => path // Absolute path replaces base
+    (true, _, _) => path // Empty base
+    (_, true, _) => base // Empty path
+    _ => {
+      let normalized_base = if base.has_suffix("/") { base } else { base + "/" }
+      normalize_path(normalized_base + path)
+    }
   }
 }
 

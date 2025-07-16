@@ -25,16 +25,7 @@ pub fn parse_uri(uri_string : String) -> URIResult[URI] {
   }
 }
 
-///| Find first occurrence of character in string
-pub fn find_char_index(s : String, c : Char) -> Int? {
-  let chars = s.to_array()
-  for i = 0; i < chars.length(); i = i + 1 {
-    if chars[i] == c {
-      return Some(i)
-    }
-  }
-  None
-}
+
 
 ///| Parse hier-part and optional query/fragment
 /// hier-part = "//" authority path-abempty / path-absolute / path-rootless / path-empty
@@ -112,20 +103,6 @@ fn parse_hier_part(
 }
 
 ///| Parse authority followed by path-abempty
-/// Find last occurrence of substring in string (helper function)
-pub fn find_last_index_str(s : String, substr : String) -> Int? {
-  let s_len = s.length()
-  let substr_len = substr.length()
-  if substr_len == 0 || substr_len > s_len {
-    return None
-  }
-  for i = s_len - substr_len; i >= 0; i = i - 1 {
-    if s.substring(start=i, end=i + substr_len) == substr {
-      return Some(i)
-    }
-  }
-  None
-}
 
 ///|
 fn parse_authority_and_path_abempty(

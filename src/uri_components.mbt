@@ -1,40 +1,33 @@
 /// URI component parsing (scheme, query, fragment)
 
-///| Find first occurrence of character in string
-fn find_char_in_str(s : String, c : Char) -> Int? {
-  let chars = s.to_array()
-  for i = 0; i < chars.length(); i = i + 1 {
-    if chars[i] == c {
-      return Some(i)
-    }
-  }
-  None
-}
+
 
 ///| Parse scheme: ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
 pub fn parse_scheme(s : String) -> URIResult[String] {
   if s.is_empty() {
-    Err(InvalidScheme("Scheme cannot be empty"))
-  } else {
-    let chars = s.to_array()
-
-    // First character must be ALPHA
-    if not(is_alpha(chars[0])) {
-      Err(InvalidScheme("Scheme must start with a letter"))
-    } else {
-      // Check remaining characters
-      let mut valid = true
-      for i = 1; i < chars.length(); i = i + 1 {
-        if not(is_scheme_char(chars[i])) {
-          valid = false
-        }
-      }
-      if valid {
-        Ok(s.to_lower()) // Schemes are case-insensitive, normalize to lowercase
-      } else {
-        Err(InvalidScheme("Invalid characters in scheme"))
-      }
+    return Err(InvalidScheme("Scheme cannot be empty"))
+  }
+  
+  let chars = s.to_array()
+  
+  // First character must be ALPHA
+  if not(is_alpha(chars[0])) {
+    return Err(InvalidScheme("Scheme must start with a letter"))
+  }
+  
+  // Check all characters are valid for scheme
+  let mut all_valid = true
+  for char in chars {
+    if not(is_scheme_char(char)) {
+      all_valid = false
+      break
     }
+  }
+  
+  if all_valid {
+    Ok(s.to_lower()) // Schemes are case-insensitive, normalize to lowercase
+  } else {
+    Err(InvalidScheme("Invalid characters in scheme"))
   }
 }
 
@@ -66,7 +59,7 @@ pub fn parse_query_params(query : String) -> Array[(String, String)] {
   for pair in pairs {
     let pair_str = pair.to_string()
     if pair_str.contains("=") {
-      let eq_pos = find_char_in_str(pair_str, '=')
+      let eq_pos = find_char_index(pair_str, '=')
       match eq_pos {
         Some(pos) => {
           let key = pair_str.substring(start=0, end=pos)
@@ -98,17 +91,15 @@ pub fn build_query_string(params : Array[(String, String)]) -> String {
   if params.is_empty() {
     return ""
   }
-  let parts : Array[String] = []
-  for i = 0; i < params.length(); i = i + 1 {
-    let (key, value) = params[i]
+  let parts = params.map(fn(pair) {
+    let (key, value) = pair
     let encoded_key = encode_query(key)
     if value.is_empty() {
-      parts.push(encoded_key)
+      encoded_key
     } else {
-      let encoded_value = encode_query(value)
-      parts.push(encoded_key + "=" + encoded_value)
+      encoded_key + "=" + encode_query(value)
     }
-  }
+  })
   parts.join("&")
 }
 
