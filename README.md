@@ -23,14 +23,14 @@ This library provides robust parsing, validation, and creation of Uniform Resour
 Add this package to your MoonBit project:
 
 ```bash
-moon add username/uri
+moon add BigOrangeQWQ/uri
 ```
 
 Then import it in your `moon.pkg.json`:
 
 ```json
 {
-  "import": ["username/uri"]
+  "import": ["BigOrangeQWQ/uri"]
 }
 ```
 
