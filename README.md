@@ -1,22 +1,10 @@
-# MoonBit URI Library
+# MoonBit URI Library (Vibe)
 
 A comprehensive URI parsing and manipulation library for the MoonBit programming language, implementing RFC 3986 specification.
 
 ## Overview
 
 This library provides robust parsing, validation, and creation of Uniform Resource Identifiers (URIs). It supports all standard URI components including schemes, authorities, paths, queries, and fragments, with proper percent-encoding handling and comprehensive validation.
-
-## Features
-
-- **Complete RFC 3986 Implementation**: Full compliance with URI specification
-- **Parsing and Validation**: Parse URI strings with comprehensive error reporting
-- **Builder Pattern**: Fluent API for constructing URIs programmatically
-- **Authority Handling**: Support for userinfo, hosts (IPv4, IPv6, domain names), and ports
-- **Path Management**: Support for all path types (absolute, relative, empty, etc.)
-- **Query Parameter Support**: Build and parse query strings with proper encoding
-- **Relative Reference Resolution**: Resolve relative URIs against base URIs
-- **Percent Encoding**: Proper encoding/decoding for URI components
-- **Type Safety**: Strong typing with comprehensive error reporting
 
 ## Installation
 
@@ -347,22 +335,6 @@ The library includes comprehensive tests for all functionality. Run tests with:
 moon test
 ```
 
-## Compliance
-
-This library implements RFC 3986 (Uniform Resource Identifier) specification with full support for:
-
-- URI syntax and components
-- Percent-encoding mechanisms
-- Reserved and unreserved characters
-- Authority component parsing (userinfo, host, port)
-- Path normalization and classification
-- Query and fragment handling
-- Relative reference resolution
-
 ## License
 
 Licensed under Apache 2.0 License.
-
-## Contributing
-
-Contributions are welcome. Please ensure all tests pass and follow the existing code style.
