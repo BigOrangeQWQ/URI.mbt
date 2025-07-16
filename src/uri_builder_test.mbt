@@ -136,7 +136,7 @@ test "uri to string conversion" {
   for i = 0; i < test_cases.length(); i = i + 1 {
     let (scheme, auth_str, path, query, fragment, expected) = test_cases[i]
     let authority = match auth_str {
-      Some(s) => {
+      Some(s) =>
         if s.is_empty() {
           // Special case for empty authority (like file://)
           Some(@uri.create_authority(None, @uri.make_reg_name_host(""), None))
@@ -146,7 +146,6 @@ test "uri to string conversion" {
             Err(_) => None
           }
         }
-      }
       None => None
     }
     match @uri.create_uri(scheme, authority, path, query, fragment) {
@@ -162,7 +161,11 @@ test "uri to string conversion" {
 ///|
 test "uri resolution" {
   // Test resolving relative reference against base URI
-  match (@uri.parse_uri("http://example.com/a/b/c"), @uri.parse_uri_reference("../d")) {
+  match
+    (
+      @uri.parse_uri("http://example.com/a/b/c"),
+      @uri.parse_uri_reference("../d"),
+    ) {
     (Ok(base), Ok(relative)) =>
       match @uri.resolve_reference(base, relative) {
         Ok(resolved) => {

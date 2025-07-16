@@ -56,14 +56,17 @@ pub fn make_ipv4_host(addr : String) -> HostType {
   IPv4(addr)
 }
 
+///|
 pub fn make_ipv6_host(addr : String) -> HostType {
   IPv6(addr)
 }
 
+///|
 pub fn make_ipv_future_host(addr : String) -> HostType {
   IPvFuture(addr)
 }
 
+///|
 pub fn make_reg_name_host(name : String) -> HostType {
   RegName(name)
 }

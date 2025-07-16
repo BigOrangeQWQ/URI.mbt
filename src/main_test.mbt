@@ -7,7 +7,7 @@ test "main function demo" {
       let reconstructed = @uri.uri_to_string(uri)
       assert_eq(reconstructed, uri_string)
       assert_eq(uri.scheme, "https")
-      
+
       // Test additional properties to increase coverage
       match uri.authority {
         Some(auth) => {
@@ -19,7 +19,6 @@ test "main function demo" {
         }
         None => fail("Expected authority")
       }
-      
       assert_eq(uri.path, "/path")
       assert_eq(uri.query, Some("query=value"))
       assert_eq(uri.fragment, Some("fragment"))
@@ -28,15 +27,13 @@ test "main function demo" {
   }
 }
 
+///|
 test "comprehensive uri examples" {
   // Test more URI examples to increase coverage
   let test_uris = [
-    "http://example.com/",
-    "ftp://user:pass@ftp.example.com:21/dir/",
-    "mailto:test@example.com",
+    "http://example.com/", "ftp://user:pass@ftp.example.com:21/dir/", "mailto:test@example.com",
     "file:///absolute/path",
   ]
-  
   for i = 0; i < test_uris.length(); i = i + 1 {
     let uri_str = test_uris[i]
     match @uri.parse_uri(uri_str) {

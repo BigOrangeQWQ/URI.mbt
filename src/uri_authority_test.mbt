@@ -140,7 +140,12 @@ test "authority with different host types" {
     (None, @uri.make_ipv6_host("::1"), None, "[::1]"),
     (None, @uri.make_ipv_future_host("v1.abc"), None, "[v1.abc]"),
     (None, @uri.make_reg_name_host("example.com"), None, "example.com"),
-    (Some("user"), @uri.make_reg_name_host("example.com"), Some(80), "user@example.com:80"),
+    (
+      Some("user"),
+      @uri.make_reg_name_host("example.com"),
+      Some(80),
+      "user@example.com:80",
+    ),
   ]
   for i = 0; i < test_cases.length(); i = i + 1 {
     let (userinfo, host, port, expected) = test_cases[i]

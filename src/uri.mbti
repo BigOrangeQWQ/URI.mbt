@@ -134,7 +134,7 @@ fn validate_uri_components(String, Authority?, String, String?, String?) -> Resu
 fn validate_uri_comprehensive(URI) -> Result[Unit, URIError]
 
 // Types and methods
-pub struct Authority {
+pub(all) struct Authority {
   userinfo : String?
   host : HostType
   port : Int?
@@ -142,7 +142,7 @@ pub struct Authority {
 impl Eq for Authority
 impl Show for Authority
 
-pub enum HostType {
+pub(all) enum HostType {
   IPv4(String)
   IPv6(String)
   IPvFuture(String)
@@ -151,7 +151,7 @@ pub enum HostType {
 impl Eq for HostType
 impl Show for HostType
 
-pub enum PathType {
+pub(all) enum PathType {
   AbEmpty
   Absolute
   NoScheme
@@ -161,7 +161,7 @@ pub enum PathType {
 impl Eq for PathType
 impl Show for PathType
 
-pub struct URI {
+pub(all) struct URI {
   scheme : String
   authority : Authority?
   path : String

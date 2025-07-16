@@ -1,7 +1,7 @@
 ///| Main function demonstrating URI library usage
 fn main {
   println("URI Library")
-  
+
   // Example URI parsing and reconstruction
   let uri_string = "https://example.com:8080/path?query=value#fragment"
   match parse_uri(uri_string) {

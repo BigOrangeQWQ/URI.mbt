@@ -73,15 +73,12 @@ fn parse_h16(s : String) -> Bool {
   }
 }
 
-
-
 ///| Simplified IPv6 address validation
 /// This is a simplified version that checks basic structure
 /// A full implementation would need to handle all IPv6 compression rules
 pub fn parse_ipv6_address(s : String) -> URIResult[String] {
   let chars = s.to_array()
   let mut colon_count = 0
-
   let mut has_double_colon = false
 
   // Check for invalid patterns like ":::"
@@ -98,7 +95,9 @@ pub fn parse_ipv6_address(s : String) -> URIResult[String] {
           has_double_colon = true
         } else {
           // Multiple double colons found
-          return Err(InvalidHost("IPv6 address can have at most one double colon"))
+          return Err(
+            InvalidHost("IPv6 address can have at most one double colon"),
+          )
         }
       }
     }
@@ -186,7 +185,9 @@ pub fn parse_ipv_future(s : String) -> URIResult[String] {
 ///| Parse IP literal: "[" ( IPv6address / IPvFuture  ) "]"
 pub fn parse_ip_literal(s : String) -> URIResult[HostType] {
   let len = s.length()
-  if len < 3 || s.charcode_at(0) != '['.to_int() || s.charcode_at(len - 1) != ']'.to_int() {
+  if len < 3 ||
+    s.charcode_at(0) != '['.to_int() ||
+    s.charcode_at(len - 1) != ']'.to_int() {
     Err(InvalidHost("IP literal must be enclosed in brackets"))
   } else {
     let inner = s.substring(start=1, end=len - 1)

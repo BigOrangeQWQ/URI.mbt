@@ -1,17 +1,19 @@
 ///| Tests for URI component parsing
 test "scheme parsing valid" {
-  let valid_schemes = ["http", "https", "ftp", "file", "mailto", "tel", "HTTP", "HTTPS"]
+  let valid_schemes = [
+    "http", "https", "ftp", "file", "mailto", "tel", "HTTP", "HTTPS",
+  ]
   for i = 0; i < valid_schemes.length(); i = i + 1 {
     match @uri.parse_scheme(valid_schemes[i]) {
-      Ok(scheme) => {
+      Ok(scheme) =>
         // Schemes should be normalized to lowercase
         assert_eq(scheme, valid_schemes[i].to_lower())
-      }
       Err(e) => fail("Should be valid scheme \{valid_schemes[i]}: \{e}")
     }
   }
 }
 
+///|
 test "scheme parsing invalid" {
   let invalid_schemes = ["", "123", "_http", "http:", "ht@tp", "http//"]
   for i = 0; i < invalid_schemes.length(); i = i + 1 {
@@ -22,6 +24,7 @@ test "scheme parsing invalid" {
   }
 }
 
+///|
 test "query parsing" {
   let valid_queries = ["", "key=value", "a=1&b=2", "key", "complex%20query"]
   for i = 0; i < valid_queries.length(); i = i + 1 {
@@ -32,8 +35,11 @@ test "query parsing" {
   }
 }
 
+///|
 test "fragment parsing" {
-  let valid_fragments = ["", "section1", "complex%20fragment", "frag?with=query"]
+  let valid_fragments = [
+    "", "section1", "complex%20fragment", "frag?with=query",
+  ]
   for i = 0; i < valid_fragments.length(); i = i + 1 {
     match @uri.parse_fragment(valid_fragments[i]) {
       Ok(fragment) => assert_eq(fragment, valid_fragments[i])
@@ -42,6 +48,7 @@ test "fragment parsing" {
   }
 }
 
+///|
 test "query parameter parsing" {
   let test_cases = [
     ("", []),
@@ -61,6 +68,7 @@ test "query parameter parsing" {
   }
 }
 
+///|
 test "query string building" {
   let test_cases = [
     ([], ""),
@@ -76,12 +84,14 @@ test "query string building" {
   }
 }
 
+///|
 test "scheme comparison" {
   assert_eq(@uri.schemes_equal("http", "HTTP"), true)
   assert_eq(@uri.schemes_equal("https", "https"), true)
   assert_eq(@uri.schemes_equal("http", "https"), false)
 }
 
+///|
 test "uri case normalization" {
   // Create a URI using parse_uri instead of manual construction
   let uri_str = "HTTP://EXAMPLE.COM:80/Path?Query=Value#Fragment"
@@ -90,12 +100,11 @@ test "uri case normalization" {
       let normalized = @uri.normalize_uri_case(uri)
       assert_eq(normalized.scheme, "http")
       match normalized.authority {
-        Some(auth) => {
+        Some(auth) =>
           match auth.host {
             @uri.HostType::RegName(name) => assert_eq(name, "example.com")
             _ => fail("Expected RegName host")
           }
-        }
         None => fail("Expected authority")
       }
     }

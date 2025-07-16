@@ -117,9 +117,11 @@ fn authorities_equivalent(auth1 : Authority?, auth2 : Authority?) -> Bool {
 fn hosts_equivalent(host1 : HostType, host2 : HostType) -> Bool {
   match (host1, host2) {
     (HostType::IPv4(addr1), HostType::IPv4(addr2)) => addr1 == addr2
-    (HostType::IPv6(addr1), HostType::IPv6(addr2)) => normalize_ipv6(addr1) == normalize_ipv6(addr2)
+    (HostType::IPv6(addr1), HostType::IPv6(addr2)) =>
+      normalize_ipv6(addr1) == normalize_ipv6(addr2)
     (HostType::IPvFuture(addr1), HostType::IPvFuture(addr2)) => addr1 == addr2
-    (HostType::RegName(name1), HostType::RegName(name2)) => name1.to_lower() == name2.to_lower()
+    (HostType::RegName(name1), HostType::RegName(name2)) =>
+      name1.to_lower() == name2.to_lower()
     _ => false
   }
 }

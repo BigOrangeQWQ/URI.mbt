@@ -50,9 +50,9 @@ test "ipv6 invalid addresses" {
      ":", // Single colon
      ":::", // Triple colon
      "2001:db8::1::2", // Multiple double colons
-     "gggg::1", // Invalid hex
+     "gggg::1",
   ]
-  for i = 0;
+  for i = 0 // Invalid hex
       i < invalid_ipv6.length()
       i = i + 1 {
     match @uri.parse_ipv6_address(invalid_ipv6[i]) {
@@ -80,9 +80,9 @@ test "ipv_future invalid" {
      "v.abc", // No version number
      "vg.abc", // Invalid hex in version
      "v1.", // No content after dot
-     "v1.ab\u{07}c", // Invalid characters after dot
+     "v1.ab\u{07}c",
   ]
-  for i = 0;
+  for i = 0 // Invalid characters after dot
       i < invalid_future.length()
       i = i + 1 {
     match @uri.parse_ipv_future(invalid_future[i]) {
