@@ -1,4 +1,4 @@
-package "username/uri"
+package "BigOrangeQWQ/uri"
 
 // Values
 fn authority_to_string(Authority) -> String
@@ -92,6 +92,8 @@ fn parse_authority(String) -> Result[Authority, URIError]
 fn parse_fragment(String) -> Result[String, URIError]
 
 fn parse_host(String) -> Result[HostType, URIError]
+
+fn parse_int_simple(String) -> Int
 
 fn parse_ip_literal(String) -> Result[HostType, URIError]
 
