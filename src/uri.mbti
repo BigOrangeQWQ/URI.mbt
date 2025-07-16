@@ -1,0 +1,214 @@
+package "username/uri"
+
+// Values
+fn authority_to_string(Authority) -> String
+
+fn build_query_string(Array[(String, String)]) -> String
+
+fn classify_and_validate_path(String) -> Result[(PathType, String), URIError]
+
+fn create_authority(String?, HostType, Int?) -> Authority
+
+fn create_file_uri(String) -> Result[URI, URIError]
+
+fn create_http_uri(String, Int?, String, String?, String?) -> Result[URI, URIError]
+
+fn create_https_uri(String, Int?, String, String?, String?) -> Result[URI, URIError]
+
+fn create_simple_uri(String, String) -> Result[URI, URIError]
+
+fn create_uri(String, Authority?, String, String?, String?) -> Result[URI, URIError]
+
+fn encode_fragment(String) -> String
+
+fn encode_path_segment(String) -> String
+
+fn encode_query(String) -> String
+
+fn encode_reg_name(String) -> String
+
+fn encode_userinfo(String) -> String
+
+fn find_char_index(String, Char) -> Int?
+
+fn find_last_index_str(String, String) -> Int?
+
+fn hex_to_int(Char) -> Int?
+
+fn int_to_hex(Int) -> Char?
+
+fn is_absolute_uri(URI) -> Bool
+
+fn is_fragment_char(Char) -> Bool
+
+fn is_gen_delim(Char) -> Bool
+
+fn is_pchar(Char) -> Bool
+
+fn is_query_char(Char) -> Bool
+
+fn is_reg_name_char(Char) -> Bool
+
+fn is_relative_uri(URI) -> Bool
+
+fn is_reserved(Char) -> Bool
+
+fn is_scheme_char(Char) -> Bool
+
+fn is_segment_nz_nc_char(Char) -> Bool
+
+fn is_sub_delim(Char) -> Bool
+
+fn is_unreserved(Char) -> Bool
+
+fn is_userinfo_char(Char) -> Bool
+
+fn is_valid_encoded_string(String, (Char) -> Bool) -> Bool
+
+fn is_valid_percent_encoding(String) -> Bool
+
+fn is_valid_uri(String) -> Bool
+
+fn is_valid_uri_reference(String) -> Bool
+
+fn join_paths(String, String) -> String
+
+fn make_ipv4_host(String) -> HostType
+
+fn make_ipv6_host(String) -> HostType
+
+fn make_ipv_future_host(String) -> HostType
+
+fn make_reg_name_host(String) -> HostType
+
+fn new_builder() -> URIBuilder
+
+fn normalize_path(String) -> String
+
+fn normalize_uri_case(URI) -> URI
+
+fn parse_authority(String) -> Result[Authority, URIError]
+
+fn parse_fragment(String) -> Result[String, URIError]
+
+fn parse_host(String) -> Result[HostType, URIError]
+
+fn parse_ip_literal(String) -> Result[HostType, URIError]
+
+fn parse_ipv4_address(String) -> Result[String, URIError]
+
+fn parse_ipv6_address(String) -> Result[String, URIError]
+
+fn parse_ipv_future(String) -> Result[String, URIError]
+
+fn parse_query(String) -> Result[String, URIError]
+
+fn parse_query_params(String) -> Array[(String, String)]
+
+fn parse_scheme(String) -> Result[String, URIError]
+
+fn parse_uri(String) -> Result[URI, URIError]
+
+fn parse_uri_reference(String) -> Result[URI, URIError]
+
+fn path_segments(String) -> Array[String]
+
+fn percent_decode(String) -> Result[String, URIError]
+
+fn percent_encode(String, (Char) -> Bool) -> String
+
+fn resolve_reference(URI, URI) -> Result[URI, URIError]
+
+fn schemes_equal(String, String) -> Bool
+
+fn uri_to_string(URI) -> String
+
+fn uris_equivalent(URI, URI) -> Bool
+
+fn validate_path_abempty(String) -> Result[String, URIError]
+
+fn validate_scheme_specific(URI) -> Result[Unit, URIError]
+
+fn validate_uri_components(String, Authority?, String, String?, String?) -> Result[Unit, URIError]
+
+fn validate_uri_comprehensive(URI) -> Result[Unit, URIError]
+
+// Types and methods
+pub struct Authority {
+  userinfo : String?
+  host : HostType
+  port : Int?
+}
+impl Eq for Authority
+impl Show for Authority
+
+pub enum HostType {
+  IPv4(String)
+  IPv6(String)
+  IPvFuture(String)
+  RegName(String)
+}
+impl Eq for HostType
+impl Show for HostType
+
+pub enum PathType {
+  AbEmpty
+  Absolute
+  NoScheme
+  Rootless
+  Empty
+}
+impl Eq for PathType
+impl Show for PathType
+
+pub struct URI {
+  scheme : String
+  authority : Authority?
+  path : String
+  path_type : PathType
+  query : String?
+  fragment : String?
+}
+impl Eq for URI
+impl Show for URI
+
+pub struct URIBuilder {
+  mut scheme : String
+  mut authority : Authority?
+  mut path : String
+  mut query : String?
+  mut fragment : String?
+}
+fn URIBuilder::add_path_segment(Self, String) -> Self
+fn URIBuilder::add_query_param(Self, String, String) -> Self
+fn URIBuilder::authority(Self, Authority) -> Self
+fn URIBuilder::build(Self) -> Result[URI, URIError]
+fn URIBuilder::fragment(Self, String) -> Self
+fn URIBuilder::host(Self, String) -> Self
+fn URIBuilder::path(Self, String) -> Self
+fn URIBuilder::port(Self, Int) -> Self
+fn URIBuilder::query(Self, String) -> Self
+fn URIBuilder::query_params(Self, Array[(String, String)]) -> Self
+fn URIBuilder::scheme(Self, String) -> Self
+fn URIBuilder::userinfo(Self, String) -> Self
+impl Show for URIBuilder
+
+pub enum URIError {
+  InvalidScheme(String)
+  InvalidAuthority(String)
+  InvalidHost(String)
+  InvalidPort(String)
+  InvalidPath(String)
+  InvalidQuery(String)
+  InvalidFragment(String)
+  InvalidPercentEncoding(String)
+  MalformedURI(String)
+}
+impl Eq for URIError
+impl Show for URIError
+
+// Type aliases
+pub typealias Result[T, URIError] as URIResult[T]
+
+// Traits
+
