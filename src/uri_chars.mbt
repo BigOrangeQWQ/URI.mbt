@@ -79,48 +79,32 @@ pub fn is_segment_nz_nc_char(c : Char) -> Bool {
 
 ///| Convert hex character to its numeric value
 pub fn hex_to_int(c : Char) -> Int? {
-  match c {
-    '0' => Some(0)
-    '1' => Some(1)
-    '2' => Some(2)
-    '3' => Some(3)
-    '4' => Some(4)
-    '5' => Some(5)
-    '6' => Some(6)
-    '7' => Some(7)
-    '8' => Some(8)
-    '9' => Some(9)
-    'A' | 'a' => Some(10)
-    'B' | 'b' => Some(11)
-    'C' | 'c' => Some(12)
-    'D' | 'd' => Some(13)
-    'E' | 'e' => Some(14)
-    'F' | 'f' => Some(15)
-    _ => None
+  if is_hexdig(c) {
+    let code = c.to_int()
+    if code >= 48 && code <= 57 {
+      // '0'-'9'
+      Some(code - 48)
+    } else if code >= 65 && code <= 70 {
+      // 'A'-'F'
+      Some(code - 55)
+    } else if code >= 97 && code <= 102 {
+      // 'a'-'f'  
+      Some(code - 87)
+    } else {
+      None
+    }
+  } else {
+    None
   }
 }
 
 ///| Convert integer to hex character (uppercase)
 pub fn int_to_hex(n : Int) -> Char? {
   if n >= 0 && n <= 15 {
-    match n {
-      0 => Some('0')
-      1 => Some('1')
-      2 => Some('2')
-      3 => Some('3')
-      4 => Some('4')
-      5 => Some('5')
-      6 => Some('6')
-      7 => Some('7')
-      8 => Some('8')
-      9 => Some('9')
-      10 => Some('A')
-      11 => Some('B')
-      12 => Some('C')
-      13 => Some('D')
-      14 => Some('E')
-      15 => Some('F')
-      _ => None
+    if n < 10 {
+      Some((48 + n).unsafe_to_char()) // '0'-'9'
+    } else {
+      Some((55 + n).unsafe_to_char()) // 'A'-'F'
     }
   } else {
     None

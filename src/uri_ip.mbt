@@ -5,25 +5,20 @@
 ///| Parse a decimal octet (0-255)
 /// dec-octet = DIGIT / %x31-39 DIGIT / "1" 2DIGIT / "2" %x30-34 DIGIT / "25" %x30-35
 fn parse_dec_octet(s : String) -> Bool {
-  let chars = s.to_array()
-  let len = chars.length()
-  if len == 0 || len > 3 {
-    false
-  } else {
-    let mut all_digits = true
-    for i = 0; i < len; i = i + 1 {
-      if not(is_digit(chars[i])) {
-        all_digits = false
-      }
-    }
-    if not(all_digits) {
-      false
-    } else {
-      // Convert to integer and check range
-      let n = parse_int_simple(s)
-      n >= 0 && n <= 255
+  if s.is_empty() || s.length() > 3 {
+    return false
+  }
+  
+  // Check all characters are digits
+  for c in s {
+    if not(is_digit(c)) {
+      return false
     }
   }
+  
+  // Convert to integer and check range
+  let n = parse_int_simple(s)
+  n >= 0 && n <= 255
 }
 
 ///| Parse IPv4 address: dec-octet "." dec-octet "." dec-octet "." dec-octet
@@ -49,126 +44,124 @@ pub fn parse_ipv4_address(s : String) -> URIResult[String] {
 
 ///| Parse a 16-bit hex value (h16): 1*4HEXDIG
 fn parse_h16(s : String) -> Bool {
-  let chars = s.to_array()
-  let len = chars.length()
-  if len >= 1 && len <= 4 {
-    let mut all_hex = true
-    for i = 0; i < len; i = i + 1 {
-      if not(is_hexdig(chars[i])) {
-        all_hex = false
-      }
-    }
-    all_hex
-  } else {
-    false
+  let len = s.length()
+  if len < 1 || len > 4 {
+    return false
   }
+  
+  // Check all characters are hex digits
+  for c in s {
+    if not(is_hexdig(c)) {
+      return false
+    }
+  }
+  true
 }
 
 ///| Simplified IPv6 address validation
 /// This is a simplified version that checks basic structure
 /// A full implementation would need to handle all IPv6 compression rules
 pub fn parse_ipv6_address(s : String) -> URIResult[String] {
-  let chars = s.to_array()
-  let mut colon_count = 0
-  let mut has_double_colon = false
-
   // Check for invalid patterns like ":::"
   if s.contains(":::") {
     return Err(InvalidHost("Invalid IPv6 address: triple colon not allowed"))
   }
 
-  // Count colons and check for double colons
-  for i = 0; i < chars.length(); i = i + 1 {
-    if chars[i] == ':' {
-      colon_count += 1
-      if i > 0 && chars[i - 1] == ':' {
-        if not(has_double_colon) {
-          has_double_colon = true
-        } else {
-          // Multiple double colons found
-          return Err(
-            InvalidHost("IPv6 address can have at most one double colon"),
-          )
-        }
-      }
-    }
+  let double_colon_count = count_substring_occurrences(s, "::")
+  if double_colon_count > 1 {
+    return Err(InvalidHost("IPv6 address can have at most one double colon"))
   }
 
+  let colon_count = count_char_occurrences(s, ':')
   // Basic validation - IPv6 should have 2-7 colons  
   if colon_count < 2 || colon_count > 7 {
-    Err(InvalidHost("Invalid IPv6 address structure"))
-  } else {
-    // More detailed validation would be needed for production use
-    // For now, we'll accept if it meets basic structural requirements
-    let parts = s.split(":")
-    let parts_arr = parts.collect()
-    let mut valid = true
-    for i = 0; i < parts_arr.length(); i = i + 1 {
-      let part = parts_arr[i].to_string()
-      if part.length() > 0 {
-        if i == parts_arr.length() - 1 && part.contains(".") {
-          // Last part might be IPv4
-          match parse_ipv4_address(part) {
-            Ok(_) => continue
-            Err(_) => valid = false
-          }
-        } else if not(parse_h16(part)) {
-          valid = false
+    return Err(InvalidHost("Invalid IPv6 address structure"))
+  }
+
+  // Validate parts
+  let parts = s.split(":").collect()
+  for i = 0; i < parts.length(); i = i + 1 {
+    let part = parts[i].to_string()
+    if part.length() > 0 {
+      if i == parts.length() - 1 && part.contains(".") {
+        // Last part might be IPv4
+        match parse_ipv4_address(part) {
+          Err(_) => return Err(InvalidHost("Invalid IPv4 suffix in IPv6"))
+          Ok(_) => continue
         }
+      } else if not(parse_h16(part)) {
+        return Err(InvalidHost("Invalid hex segment in IPv6"))
       }
     }
-    if valid {
-      Ok(s)
-    } else {
-      Err(InvalidHost("Invalid IPv6 address format"))
+  }
+  Ok(s)
+}
+
+/// 计算字符在字符串中的出现次数
+fn count_char_occurrences(s : String, c : Char) -> Int {
+  let mut count = 0
+  for ch in s {
+    if ch == c {
+      count += 1
     }
   }
+  count
+}
+
+/// 计算子字符串在字符串中的出现次数
+fn count_substring_occurrences(s : String, substr : String) -> Int {
+  if substr.is_empty() {
+    return 0
+  }
+  let mut count = 0
+  let mut pos = 0
+  let s_len = s.length()
+  let sub_len = substr.length()
+  
+  while pos <= s_len - sub_len {
+    if s.substring(start=pos, end=pos + sub_len) == substr {
+      count += 1
+      pos += sub_len
+    } else {
+      pos += 1
+    }
+  }
+  count
 }
 
 ///| Parse IPvFuture: "v" 1*HEXDIG "." 1*( unreserved / sub-delims / ":" )
 pub fn parse_ipv_future(s : String) -> URIResult[String] {
-  let chars = s.to_array()
-  let len = chars.length()
-  if len < 4 || chars[0] != 'v' {
-    Err(InvalidHost("IPvFuture must start with 'v'"))
-  } else {
-    // Find the dot
-    let mut dot_pos = -1
-    for i = 1; i < len; i = i + 1 {
-      if chars[i] == '.' {
-        dot_pos = i
-        break
+  if s.length() < 4 || not(s.has_prefix("v")) {
+    return Err(InvalidHost("IPvFuture must start with 'v'"))
+  }
+
+  match s.find(".") {
+    None => Err(InvalidHost("IPvFuture must contain a dot"))
+    Some(dot_pos) => {
+      if dot_pos == 1 {
+        return Err(InvalidHost("IPvFuture must have version number after 'v'"))
       }
-    }
-    if dot_pos == -1 || dot_pos == 1 {
-      Err(InvalidHost("IPvFuture must have version number after 'v'"))
-    } else {
-      // Check hex digits in version
-      let mut valid_version = true
-      for i = 1; i < dot_pos; i = i + 1 {
-        if not(is_hexdig(chars[i])) {
-          valid_version = false
+      if dot_pos == s.length() - 1 {
+        return Err(InvalidHost("IPvFuture must have content after dot"))
+      }
+      
+      // Check version part (hex digits)
+      let version_part = s.substring(start=1, end=dot_pos)
+      for c in version_part {
+        if not(is_hexdig(c)) {
+          return Err(InvalidHost("IPvFuture version must be hex digits"))
         }
       }
-      if not(valid_version) {
-        Err(InvalidHost("IPvFuture version must be hex digits"))
-      } else if dot_pos == len - 1 {
-        Err(InvalidHost("IPvFuture must have content after dot"))
-      } else {
-        // Check remaining characters
-        let mut valid_content = true
-        for i = dot_pos + 1; i < len; i = i + 1 {
-          let c = chars[i]
-          if not(is_unreserved(c) || is_sub_delim(c) || c == ':') {
-            valid_content = false
-          }
-        }
-        if valid_content {
-          Ok(s)
-        } else {
-          Err(InvalidHost("Invalid characters in IPvFuture"))
+      
+      // Check content part
+      let content_part = s.substring(start=dot_pos + 1)
+      for c in content_part {
+        if not(is_unreserved(c) || is_sub_delim(c) || c == ':') {
+          return Err(InvalidHost("Invalid characters in IPvFuture"))
         }
       }
+      
+      Ok(s)
     }
   }
 }

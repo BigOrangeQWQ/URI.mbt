@@ -1,6 +1,3 @@
-/// URI validation utilities
-
-///| Validate a complete URI string without parsing it fully
 pub fn is_valid_uri(uri_string : String) -> Bool {
   match parse_uri(uri_string) {
     Ok(_) => true
@@ -8,7 +5,6 @@ pub fn is_valid_uri(uri_string : String) -> Bool {
   }
 }
 
-///| Validate a URI reference string
 pub fn is_valid_uri_reference(uri_ref_string : String) -> Bool {
   match parse_uri_reference(uri_ref_string) {
     Ok(_) => true
@@ -16,72 +12,49 @@ pub fn is_valid_uri_reference(uri_ref_string : String) -> Bool {
   }
 }
 
-///| Check if URI is absolute (has scheme)
 pub fn is_absolute_uri(uri : URI) -> Bool {
   not(uri.scheme.is_empty())
 }
 
-///| Check if URI is relative (no scheme)
 pub fn is_relative_uri(uri : URI) -> Bool {
   uri.scheme.is_empty()
 }
 
-///| Validate URI according to specific scheme requirements
 pub fn validate_scheme_specific(uri : URI) -> URIResult[Unit] {
   match uri.scheme {
     "http" | "https" => validate_http_uri(uri)
     "ftp" => validate_ftp_uri(uri)
     "file" => validate_file_uri(uri)
-    _ => Ok(()) // Unknown schemes are allowed
+    _ => Ok(())
   }
 }
 
-///| Validate HTTP/HTTPS URIs
 fn validate_http_uri(uri : URI) -> URIResult[Unit] {
-  // HTTP URIs should have authority
   match uri.authority {
     None => Err(InvalidAuthority("HTTP URIs must have an authority component"))
-    Some(auth) =>
-      // Check for valid port ranges
-      match auth.port {
-        Some(port) =>
-          if port < 1 || port > 65535 {
-            Err(InvalidPort("HTTP port must be between 1 and 65535"))
-          } else {
-            Ok(())
-          }
-        None => Ok(())
-      }
+    Some(auth) => match auth.port {
+      Some(port) if port < 1 || port > 65535 => 
+        Err(InvalidPort("HTTP port must be between 1 and 65535"))
+      _ => Ok(())
+    }
   }
 }
 
-///| Validate FTP URIs
 fn validate_ftp_uri(uri : URI) -> URIResult[Unit] {
-  // FTP URIs should have authority
   match uri.authority {
     None => Err(InvalidAuthority("FTP URIs must have an authority component"))
     Some(_) => Ok(())
   }
 }
 
-///| Validate file URIs
 fn validate_file_uri(uri : URI) -> URIResult[Unit] {
-  // File URIs have specific path requirements
   if uri.scheme == "file" {
     match uri.authority {
-      Some(auth) =>
-        // Authority can be empty (localhost) or a host name
-        match auth.host {
-          HostType::RegName(name) =>
-            if name != "localhost" && not(name.is_empty()) {
-              // Non-empty, non-localhost hostnames in file URIs are implementation-dependent
-              Ok(())
-            } else {
-              Ok(())
-            }
-          _ => Err(InvalidHost("File URIs should use reg-name for host"))
-        }
-      None => Ok(()) // Authority can be omitted
+      Some(auth) => match auth.host {
+        HostType::RegName(_) => Ok(())
+        _ => Err(InvalidHost("File URIs should use reg-name for host"))
+      }
+      None => Ok(())
     }
   } else {
     Ok(())
@@ -105,7 +78,7 @@ pub fn uris_equivalent(uri1 : URI, uri2 : URI) -> Bool {
 fn authorities_equivalent(auth1 : Authority?, auth2 : Authority?) -> Bool {
   match (auth1, auth2) {
     (None, None) => true
-    (Some(a1), Some(a2)) =>
+    (Some(a1), Some(a2)) => 
       a1.userinfo == a2.userinfo &&
       hosts_equivalent(a1.host, a2.host) &&
       ports_equivalent(a1.port, a2.port, a1.host)
@@ -153,26 +126,14 @@ fn normalize_ipv6(addr : String) -> String {
   addr.to_lower()
 }
 
-///| Perform comprehensive URI validation
+///| Perform comprehensive URI validation - simplified implementation
 pub fn validate_uri_comprehensive(uri : URI) -> URIResult[Unit] {
-  // Basic component validation
-  match
-    validate_uri_components(
-      uri.scheme,
-      uri.authority,
-      uri.path,
-      uri.query,
-      uri.fragment,
-    ) {
+  match validate_uri_components(uri.scheme, uri.authority, uri.path, uri.query, uri.fragment) {
     Err(e) => Err(e)
-    Ok(_) =>
-      // Scheme-specific validation
-      match validate_scheme_specific(uri) {
-        Err(e) => Err(e)
-        Ok(_) =>
-          // Additional structural validation
-          validate_uri_structure(uri)
-      }
+    Ok(_) => match validate_scheme_specific(uri) {
+      Err(e) => Err(e) 
+      Ok(_) => validate_uri_structure(uri)
+    }
   }
 }
 

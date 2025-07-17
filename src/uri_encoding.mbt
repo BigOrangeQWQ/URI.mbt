@@ -5,21 +5,17 @@
 pub fn is_valid_percent_encoding(s : String) -> Bool {
   let chars = s.to_array()
   let len = chars.length()
-  fn check_from(i : Int) -> Bool {
-    if i >= len {
-      true
-    } else if chars[i] == '%' {
-      if i + 2 < len && is_hexdig(chars[i + 1]) && is_hexdig(chars[i + 2]) {
-        check_from(i + 3)
-      } else {
-        false
+  
+  for i = 0; i < len; i = i + 1 {
+    if chars[i] == '%' {
+      if i + 2 >= len || not(is_hexdig(chars[i + 1])) || not(is_hexdig(chars[i + 2])) {
+        return false
       }
-    } else {
-      check_from(i + 1)
+      // Skip the next two hex digits since we validated them
+      continue
     }
   }
-
-  check_from(0)
+  true
 }
 
 ///| Decode a percent-encoded string
@@ -27,65 +23,53 @@ pub fn percent_decode(s : String) -> URIResult[String] {
   let chars = s.to_array()
   let len = chars.length()
   let mut result = ""
-  fn decode_from(i : Int) -> URIResult[Unit] {
-    if i >= len {
-      Ok(())
-    } else if chars[i] == '%' {
-      if i + 2 < len {
-        match (hex_to_int(chars[i + 1]), hex_to_int(chars[i + 2])) {
-          (Some(h1), Some(h2)) => {
-            let byte_val = h1 * 16 + h2
-            // Convert byte value back to character
-            // Note: This is a simplified approach for ASCII characters
-            if byte_val >= 0 && byte_val <= 127 {
-              let char_result = byte_val.unsafe_to_char()
-              result = result + char_result.to_string()
-              decode_from(i + 3)
-            } else {
-              Err(InvalidPercentEncoding("Invalid byte value: \{byte_val}"))
-            }
+  let mut i = 0
+  
+  while i < len {
+    if chars[i] == '%' {
+      if i + 2 >= len {
+        return Err(InvalidPercentEncoding("Incomplete percent encoding at end"))
+      }
+      match (hex_to_int(chars[i + 1]), hex_to_int(chars[i + 2])) {
+        (Some(h1), Some(h2)) => {
+          let byte_val = h1 * 16 + h2
+          if byte_val >= 0 && byte_val <= 127 {
+            let char_result = byte_val.unsafe_to_char()
+            result = result + char_result.to_string()
+            i = i + 3
+          } else {
+            return Err(InvalidPercentEncoding("Invalid byte value: \{byte_val}"))
           }
-          _ =>
-            Err(InvalidPercentEncoding("Invalid hex digits at position \{i}"))
         }
-      } else {
-        Err(InvalidPercentEncoding("Incomplete percent encoding at end"))
+        _ => return Err(InvalidPercentEncoding("Invalid hex digits at position \{i}"))
       }
     } else {
       result = result + chars[i].to_string()
-      decode_from(i + 1)
+      i = i + 1
     }
   }
-
-  match decode_from(0) {
-    Ok(_) => Ok(result)
-    Err(e) => Err(e)
-  }
+  Ok(result)
 }
 
 ///| Encode a string with percent-encoding for characters that need it
 /// The predicate function determines which characters should be encoded
 pub fn percent_encode(s : String, should_encode : (Char) -> Bool) -> String {
-  let chars = s.to_array()
   let mut result = ""
   
-  for i = 0; i < chars.length(); i = i + 1 {
-    let c = chars[i]
+  for c in s {
     if should_encode(c) {
       let byte_val = c.to_int()
       if byte_val <= 255 {
         let h1 = byte_val / 16
         let h2 = byte_val % 16
-        result = result + "%"
         match (int_to_hex(h1), int_to_hex(h2)) {
           (Some(ch1), Some(ch2)) => {
-            result = result + ch1.to_string() + ch2.to_string()
+            result = result + "%" + ch1.to_string() + ch2.to_string()
           }
-          _ => continue // Should not happen for valid bytes
+          _ => result = result + c.to_string() // Fallback
         }
       } else {
-        // For non-ASCII characters, we'll just include them as-is
-        // In a complete implementation, you'd want proper UTF-8 encoding
+        // For non-ASCII characters, include them as-is for simplicity
         result = result + c.to_string()
       }
     } else {
@@ -127,21 +111,19 @@ pub fn is_valid_encoded_string(
 ) -> Bool {
   let chars = s.to_array()
   let len = chars.length()
-  fn check_from(i : Int) -> Bool {
-    if i >= len {
-      true
-    } else if chars[i] == '%' {
-      if i + 2 < len && is_hexdig(chars[i + 1]) && is_hexdig(chars[i + 2]) {
-        check_from(i + 3)
-      } else {
-        false
+  let mut i = 0
+  
+  while i < len {
+    if chars[i] == '%' {
+      if i + 2 >= len || not(is_hexdig(chars[i + 1])) || not(is_hexdig(chars[i + 2])) {
+        return false
       }
+      i = i + 3
     } else if char_validator(chars[i]) {
-      check_from(i + 1)
+      i = i + 1
     } else {
-      false
+      return false
     }
   }
-
-  check_from(0)
+  true
 }

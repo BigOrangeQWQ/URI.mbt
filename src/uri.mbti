@@ -39,6 +39,8 @@ fn int_to_hex(Int) -> Char?
 
 fn is_absolute_uri(URI) -> Bool
 
+fn is_empty_or_whitespace(String) -> Bool
+
 fn is_fragment_char(Char) -> Bool
 
 fn is_gen_delim(Char) -> Bool
@@ -122,6 +124,8 @@ fn percent_encode(String, (Char) -> Bool) -> String
 fn resolve_reference(URI, URI) -> Result[URI, URIError]
 
 fn schemes_equal(String, String) -> Bool
+
+fn split_string_at(String, Char) -> (String, String?)
 
 fn uri_to_string(URI) -> String
 
