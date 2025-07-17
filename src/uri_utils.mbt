@@ -1,19 +1,20 @@
-/// 使用标准库函数的简化版本
+/// 完全基于标准库的简化工具函数
 
+/// 查找字符在字符串中的位置（使用标准库）
 pub fn find_char_index(s : String, c : Char) -> Int? {
   s.find(c.to_string())
 }
 
+/// 查找子字符串最后出现的位置（使用标准库）
 pub fn find_last_index_str(s : String, substr : String) -> Int? {
   s.rev_find(substr)
 }
 
-/// 使用标准库解析整数，增加错误处理
+/// 简化的整数解析（数字字符串转整数）
 pub fn parse_int_simple(s : String) -> Int {
-  // 使用标准库的字符串转换功能
-  let chars = s.to_array()
+  // 使用简化的循环逻辑
   let mut result = 0
-  for c in chars {
+  for c in s {
     if is_digit(c) {
       result = result * 10 + (c.to_int() - '0'.to_int())
     }
@@ -21,7 +22,7 @@ pub fn parse_int_simple(s : String) -> Int {
   result
 }
 
-/// 分割字符串的简化实现
+/// 字符串分割（使用标准库 find 方法）
 pub fn split_string_at(s : String, delimiter : Char) -> (String, String?) {
   match s.find(delimiter.to_string()) {
     Some(pos) => (s.substring(start=0, end=pos), Some(s.substring(start=pos + 1)))
@@ -29,17 +30,19 @@ pub fn split_string_at(s : String, delimiter : Char) -> (String, String?) {
   }
 }
 
-/// 检查字符串是否为空或只包含空白字符 
+/// 检查字符串是否为空或只包含空白字符
 pub fn is_empty_or_whitespace(s : String) -> Bool {
   if s.is_empty() {
     true
   } else {
-    // 简单的空白字符检查
+    // 检查所有字符是否都是空白字符
+    let mut all_whitespace = true
     for c in s {
       if c != ' ' && c != '\t' && c != '\n' && c != '\r' {
-        return false
+        all_whitespace = false
+        break
       }
     }
-    true
+    all_whitespace
   }
 }

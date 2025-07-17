@@ -2,7 +2,7 @@
 
 
 
-///| Parse scheme: ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+///| 简化的 scheme 解析: ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
 pub fn parse_scheme(s : String) -> URIResult[String] {
   if s.is_empty() {
     return Err(InvalidScheme("Scheme cannot be empty"))
@@ -10,25 +10,19 @@ pub fn parse_scheme(s : String) -> URIResult[String] {
   
   let chars = s.to_array()
   
-  // First character must be ALPHA
+  // 第一个字符必须是字母
   if not(is_alpha(chars[0])) {
     return Err(InvalidScheme("Scheme must start with a letter"))
   }
   
-  // Check all characters are valid for scheme
-  let mut all_valid = true
+  // 使用更简洁的验证逻辑
   for char in chars {
     if not(is_scheme_char(char)) {
-      all_valid = false
-      break
+      return Err(InvalidScheme("Invalid characters in scheme"))
     }
   }
   
-  if all_valid {
-    Ok(s.to_lower()) // Schemes are case-insensitive, normalize to lowercase
-  } else {
-    Err(InvalidScheme("Invalid characters in scheme"))
-  }
+  Ok(s.to_lower()) // scheme 对大小写不敏感，规范化为小写
 }
 
 ///| Parse query: *( pchar / "/" / "?" )
@@ -49,61 +43,47 @@ pub fn parse_fragment(s : String) -> URIResult[String] {
   }
 }
 
-///| Split query string into key-value pairs
+///| 简化的查询字符串解析为键值对
 pub fn parse_query_params(query : String) -> Array[(String, String)] {
-  if query.is_empty() {
-    return []
-  }
-  let pairs = query.split("&")
-  let result : Array[(String, String)] = []
-  for pair in pairs {
-    let pair_str = pair.to_string()
-    if pair_str.contains("=") {
-      let eq_pos = find_char_index(pair_str, '=')
-      match eq_pos {
+  if query.is_empty() { return [] }
+  
+  query.split("&")
+    .map(fn(pair) { pair.to_string() })
+    .collect()
+    .map(fn(pair_str) {
+      match pair_str.find("=") {
         Some(pos) => {
           let key = pair_str.substring(start=0, end=pos)
           let value = pair_str.substring(start=pos + 1)
-          // Decode percent-encoded values
+          // 解码百分号编码的值
           match (percent_decode(key), percent_decode(value)) {
-            (Ok(decoded_key), Ok(decoded_value)) =>
-              result.push((decoded_key, decoded_value))
-            _ =>
-              // If decoding fails, keep original values
-              result.push((key, value))
+            (Ok(decoded_key), Ok(decoded_value)) => (decoded_key, decoded_value)
+            _ => (key, value) // 解码失败时保持原值
           }
         }
-        None => () // Should not happen since we checked contains
+        None => {
+          // 没有值的键
+          match percent_decode(pair_str) {
+            Ok(decoded_key) => (decoded_key, "")
+            Err(_) => (pair_str, "")
+          }
+        }
       }
-    } else {
-      // Key without value
-      match percent_decode(pair_str) {
-        Ok(decoded_key) => result.push((decoded_key, ""))
-        Err(_) => result.push((pair_str, ""))
-      }
-    }
-  }
-  result
+    })
 }
 
-///| Build query string from key-value pairs
+///| 简化的查询字符串构建
 pub fn build_query_string(params : Array[(String, String)]) -> String {
-  if params.is_empty() {
-    return ""
-  }
-  let parts = params.map(fn(pair) {
+  if params.is_empty() { return "" }
+  
+  params.map(fn(pair) {
     let (key, value) = pair
     let encoded_key = encode_query(key)
-    if value.is_empty() {
-      encoded_key
-    } else {
-      encoded_key + "=" + encode_query(value)
-    }
-  })
-  parts.join("&")
+    if value.is_empty() { encoded_key } else { encoded_key + "=" + encode_query(value) }
+  }).join("&")
 }
 
-///| Validate that all URI components are properly formed
+///| 简化的 URI 组件验证
 pub fn validate_uri_components(
   scheme : String,
   authority : Authority?,
@@ -111,48 +91,40 @@ pub fn validate_uri_components(
   query : String?,
   fragment : String?
 ) -> URIResult[Unit] {
-  // Validate scheme
+  // 验证 scheme
   match parse_scheme(scheme) {
     Ok(_) => ()
     Err(e) => return Err(e)
   }
-
-  // Validate query if present
+  
+  // 验证查询（如果存在）
   match query {
-    Some(q) =>
-      match parse_query(q) {
-        Ok(_) => ()
-        Err(e) => return Err(e)
-      }
+    Some(q) => match parse_query(q) {
+      Ok(_) => ()
+      Err(e) => return Err(e)
+    }
     None => ()
   }
-
-  // Validate fragment if present
+  
+  // 验证片段（如果存在）
   match fragment {
-    Some(f) =>
-      match parse_fragment(f) {
-        Ok(_) => ()
-        Err(e) => return Err(e)
-      }
+    Some(f) => match parse_fragment(f) {
+      Ok(_) => ()
+      Err(e) => return Err(e)
+    }
     None => ()
   }
 
-  // Authority validation is done during parsing
-
-  // Path validation depends on whether authority is present
+  // 根据是否有权威组件验证路径
   match authority {
-    Some(_) =>
-      // With authority, path must be path-abempty
-      match validate_path_abempty(path) {
-        Ok(_) => Ok(())
-        Err(e) => Err(e)
-      }
-    None =>
-      // Without authority, validate based on path type
-      match classify_and_validate_path(path) {
-        Ok(_) => Ok(())
-        Err(e) => Err(e)
-      }
+    Some(_) => match validate_path_abempty(path) {
+      Ok(_) => Ok(())
+      Err(e) => Err(e)
+    }
+    None => match classify_and_validate_path(path) {
+      Ok(_) => Ok(())
+      Err(e) => Err(e)
+    }
   }
 }
 

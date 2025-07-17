@@ -1,10 +1,11 @@
+/// 简化的 URI 解析函数，使用标准库函数
 pub fn parse_uri(uri_string : String) -> URIResult[URI] {
   if uri_string.is_empty() {
     return Err(MalformedURI("URI cannot be empty"))
   }
 
-  let colon_pos = find_char_index(uri_string, ':')
-  match colon_pos {
+  // 使用标准库的 find 方法
+  match uri_string.find(":") {
     None => Err(MalformedURI("URI must contain a scheme"))
     Some(pos) =>
       if pos == 0 {
@@ -49,7 +50,9 @@ fn parse_hier_part_and_rest(scheme : String, remaining : String) -> URIResult[UR
   }
 }
 
+/// 简化的字符串分割函数，直接使用标准库
 fn split_at_last_char(s : String, delimiter : Char) -> (String, String?) {
+  // 直接使用标准库的 rev_find 方法，更加简洁
   match s.rev_find(delimiter.to_string()) {
     Some(pos) => (s.substring(start=0, end=pos), Some(s.substring(start=pos + 1)))
     None => (s, None)
@@ -87,10 +90,12 @@ fn parse_authority_and_path_abempty(s : String) -> URIResult[(Authority?, String
   }
 }
 
+/// 简化的 authority 结束位置查找函数
 fn find_authority_end(s : String) -> Int? {
   let mut in_brackets = false
   let mut index = 0
   
+  // 使用标准库的字符迭代，更清晰
   for c in s {
     match c {
       '[' => in_brackets = true
@@ -114,33 +119,32 @@ pub fn parse_uri_reference(uri_ref_string : String) -> URIResult[URI] {
   }
 }
 
+/// 简化的 scheme 结束位置查找函数
 fn find_scheme_end(s : String) -> Int? {
   if s.is_empty() {
     return None
   }
   
+  // 使用标准库的字符串处理，简化逻辑
   let chars = s.to_array()
   if not(is_alpha(chars[0])) {
     return None
   }
 
-  let mut index = 1
-  for c in s.substring(start=1) {
-    if c == ':' {
-      // Check if everything before this colon is valid scheme
-      let scheme_part = s.substring(start=1, end=index)
-      for sc in scheme_part {
-        if not(is_scheme_char(sc)) {
+  // 查找第一个冒号，并验证之前的字符
+  match s.find(":") {
+    Some(pos) => {
+      // 验证 scheme 部分的所有字符
+      let scheme_part = s.substring(start=0, end=pos)
+      for c in scheme_part {
+        if not(is_scheme_char(c)) {
           return None
         }
       }
-      return Some(index)
-    } else if not(is_scheme_char(c)) {
-      return None
+      Some(pos)
     }
-    index += 1
+    None => None
   }
-  None
 }
 
 fn parse_relative_reference(rel_ref : String) -> URIResult[URI] {

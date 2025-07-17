@@ -136,22 +136,18 @@ pub fn URIBuilder::path(self : URIBuilder, path : String) -> URIBuilder {
   self
 }
 
-///| Add a path segment
+///| 简化的路径段添加
 pub fn URIBuilder::add_path_segment(
   self : URIBuilder,
   segment : String
 ) -> URIBuilder {
   let encoded_segment = encode_path_segment(segment)
-  if self.path.is_empty() {
-    // When authority exists, path should start with '/'
-    self.path = match self.authority {
-      Some(_) => "/" + encoded_segment
-      None => encoded_segment
-    }
-  } else if self.path.has_suffix("/") {
-    self.path = self.path + encoded_segment
-  } else {
-    self.path = self.path + "/" + encoded_segment
+  self.path = match (self.path.is_empty(), self.authority) {
+    (true, Some(_)) => "/" + encoded_segment  // 有权威时以 / 开头
+    (true, None) => encoded_segment           // 无权威时直接添加
+    (false, _) => 
+      if self.path.has_suffix("/") { self.path + encoded_segment } 
+      else { self.path + "/" + encoded_segment }
   }
   self
 }
@@ -172,22 +168,21 @@ pub fn URIBuilder::query_params(
   self
 }
 
-///| Add a single query parameter
+///| 简化的查询参数添加
 pub fn URIBuilder::add_query_param(
   self : URIBuilder,
   key : String,
   value : String
 ) -> URIBuilder {
-  let encoded_key = encode_query(key)
-  let encoded_value = encode_query(value)
-  let param = if value.is_empty() {
-    encoded_key
-  } else {
-    encoded_key + "=" + encoded_value
+  let param = if value.is_empty() { 
+    encode_query(key) 
+  } else { 
+    encode_query(key) + "=" + encode_query(value) 
   }
-  match self.query {
-    Some(existing) => self.query = Some(existing + "&" + param)
-    None => self.query = Some(param)
+  
+  self.query = match self.query {
+    Some(existing) => Some(existing + "&" + param)
+    None => Some(param)
   }
   self
 }
@@ -203,36 +198,30 @@ pub fn URIBuilder::build(self : URIBuilder) -> URIResult[URI] {
   create_uri(self.scheme, self.authority, self.path, self.query, self.fragment)
 }
 
-///| Convert URI back to string representation
+///| 简化的 URI 转字符串函数
 pub fn uri_to_string(uri : URI) -> String {
-  let mut result = ""
-
-  // Add scheme
-  if not(uri.scheme.is_empty()) {
-    result = result + uri.scheme + ":"
-  }
-
-  // Add authority
-  match uri.authority {
-    Some(auth) => result = result + "//" + authority_to_string(auth)
-    None => ()
-  }
-
-  // Add path
-  result = result + uri.path
-
-  // Add query
-  match uri.query {
-    Some(q) => result = result + "?" + q
-    None => ()
-  }
-
-  // Add fragment
-  match uri.fragment {
-    Some(f) => result = result + "#" + f
-    None => ()
-  }
-  result
+  let parts = [
+    // scheme
+    if uri.scheme.is_empty() { "" } else { uri.scheme + ":" },
+    // authority
+    match uri.authority {
+      Some(auth) => "//" + authority_to_string(auth)
+      None => ""
+    },
+    // path
+    uri.path,
+    // query
+    match uri.query {
+      Some(q) => "?" + q
+      None => ""
+    },
+    // fragment
+    match uri.fragment {
+      Some(f) => "#" + f
+      None => ""
+    }
+  ]
+  parts.join("")
 }
 
 ///| Resolve a relative reference against a base URI

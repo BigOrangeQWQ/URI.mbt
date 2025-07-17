@@ -114,73 +114,64 @@ pub fn validate_path_abempty(path : String) -> URIResult[String] {
   }
 }
 
-///| Normalize path by removing unnecessary components
+///| 简化的路径规范化函数
 pub fn normalize_path(path : String) -> String {
   if path.is_empty() {
     return path
   }
+  
   let is_absolute = path.has_prefix("/")
-  let segments = (if is_absolute { path.substring(start=1) } else { path }).split(
-    "/",
-  )
-  let segments_arr = segments.collect()
+  let segments = (if is_absolute { path.substring(start=1) } else { path })
+    .split("/")
+    .map(fn(s) { s.to_string() })
+    .collect()
+  
+  // 使用函数式编程风格处理段
   let normalized_segments : Array[String] = []
-  for i = 0; i < segments_arr.length(); i = i + 1 {
-    let segment = segments_arr[i].to_string()
-    if segment == "." || segment.is_empty() {
-      // Skip current directory and empty segments (except for empty first segment in absolute paths)
-      if i == 0 && is_absolute {
-        normalized_segments.push("")
+  
+  for segment in segments {
+    match segment {
+      "." | "" if normalized_segments.length() == 0 && is_absolute => normalized_segments.push("")
+      "." | "" => continue  // 跳过当前目录和空段
+      ".." => {
+        // 处理父目录
+        let len = normalized_segments.length()
+        if len > 0 && normalized_segments[len - 1] != ".." && normalized_segments[len - 1] != "" {
+          ignore(normalized_segments.pop())
+        } else if not(is_absolute) {
+          normalized_segments.push("..")  // 相对路径保留 ".."
+        }
+        // 绝对路径中根级别的 ".." 被忽略
       }
-      continue
-    } else if segment == ".." {
-      // Parent directory
-      if normalized_segments.length() > 0 &&
-        normalized_segments[normalized_segments.length() - 1] != ".." &&
-        not(normalized_segments[normalized_segments.length() - 1].is_empty()) {
-        ignore(normalized_segments.pop())
-      } else if not(is_absolute) {
-        // Keep ".." in relative paths if we can't resolve it
-        normalized_segments.push(segment)
-      }
-      // For absolute paths, ".." at root is ignored
-    } else {
-      normalized_segments.push(segment)
+      _ => normalized_segments.push(segment)
     }
   }
+  
   let result = normalized_segments.join("/")
-  if is_absolute && not(result.has_prefix("/")) {
-    "/" + result
-  } else {
-    result
-  }
+  if is_absolute && not(result.has_prefix("/")) { "/" + result } else { result }
 }
 
-///| Join two paths
+///| 简化的路径连接函数
 pub fn join_paths(base : String, path : String) -> String {
   match (base.is_empty(), path.is_empty(), path.has_prefix("/")) {
-    (_, _, true) => path // Absolute path replaces base
-    (true, _, _) => path // Empty base
-    (_, true, _) => base // Empty path
+    (_, _, true) => path // 绝对路径替换基路径
+    (true, _, _) => path // 空基路径
+    (_, true, _) => base // 空路径
     _ => {
-      let normalized_base = if base.has_suffix("/") { base } else { base + "/" }
-      normalize_path(normalized_base + path)
+      let base_with_slash = if base.has_suffix("/") { base } else { base + "/" }
+      normalize_path(base_with_slash + path)
     }
   }
 }
 
-///| Split path into segments
+///| 简化的路径分段函数
 pub fn path_segments(path : String) -> Array[String] {
-  if path.is_empty() {
-    []
-  } else if path == "/" {
-    [""]
-  } else {
-    let trimmed = if path.has_prefix("/") {
-      path.substring(start=1)
-    } else {
-      path
+  match path {
+    "" => []
+    "/" => [""]
+    _ => {
+      let trimmed = if path.has_prefix("/") { path.substring(start=1) } else { path }
+      trimmed.split("/").map(fn(s) { s.to_string() }).collect()
     }
-    trimmed.split("/").map(fn(s) { s.to_string() }).collect()
   }
 }
