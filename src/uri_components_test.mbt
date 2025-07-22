@@ -33,7 +33,7 @@ test "query parsing" {
       Err(e) => fail("Should be valid query \{valid_queries[i]}: \{e}")
     }
   }
-  
+
   // Test invalid query (with control characters)
   match @uri.parse_query("param=value\u{0001}bad") {
     Ok(_) => () // May be valid depending on implementation
@@ -48,10 +48,11 @@ test "fragment parsing" {
   for i = 0; i < valid_fragments.length(); i = i + 1 {
     match @uri.parse_fragment(valid_fragments[i]) {
       Ok(fragment) => assert_eq(fragment, valid_fragments[i])
-      Err(e) => fail("Valid fragment should parse: \{valid_fragments[i]}, error: \{e}")
+      Err(e) =>
+        fail("Valid fragment should parse: \{valid_fragments[i]}, error: \{e}")
     }
   }
-  
+
   // Test invalid fragment (with control characters)
   match @uri.parse_fragment("fragment\u{0002}bad") {
     Ok(_) => () // May be valid

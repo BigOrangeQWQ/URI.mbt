@@ -1,21 +1,19 @@
 /// IP address parsing utilities for IPv4, IPv6, and IPvFuture
 
-
-
 ///| Parse a decimal octet (0-255)
 /// dec-octet = DIGIT / %x31-39 DIGIT / "1" 2DIGIT / "2" %x30-34 DIGIT / "25" %x30-35
 fn parse_dec_octet(s : String) -> Bool {
   if s.is_empty() || s.length() > 3 {
     return false
   }
-  
+
   // Check all characters are digits
   for c in s {
     if not(is_digit(c)) {
       return false
     }
   }
-  
+
   // Convert to integer and check range
   let n = parse_int_simple(s)
   n >= 0 && n <= 255
@@ -48,7 +46,7 @@ fn parse_h16(s : String) -> Bool {
   if len < 1 || len > 4 {
     return false
   }
-  
+
   // Check all characters are hex digits
   for c in s {
     if not(is_hexdig(c)) {
@@ -66,12 +64,10 @@ pub fn parse_ipv6_address(s : String) -> URIResult[String] {
   if s.contains(":::") {
     return Err(InvalidHost("Invalid IPv6 address: triple colon not allowed"))
   }
-
   let double_colon_count = count_substring_occurrences(s, "::")
   if double_colon_count > 1 {
     return Err(InvalidHost("IPv6 address can have at most one double colon"))
   }
-
   let colon_count = count_char_occurrences(s, ':')
   // Basic validation - IPv6 should have 2-7 colons  
   if colon_count < 2 || colon_count > 7 {
@@ -97,7 +93,7 @@ pub fn parse_ipv6_address(s : String) -> URIResult[String] {
   Ok(s)
 }
 
-/// 计算字符在字符串中的出现次数
+///| 计算字符在字符串中的出现次数
 fn count_char_occurrences(s : String, c : Char) -> Int {
   let mut count = 0
   for ch in s {
@@ -108,7 +104,7 @@ fn count_char_occurrences(s : String, c : Char) -> Int {
   count
 }
 
-/// 计算子字符串在字符串中的出现次数
+///| 计算子字符串在字符串中的出现次数
 fn count_substring_occurrences(s : String, substr : String) -> Int {
   if substr.is_empty() {
     return 0
@@ -117,7 +113,6 @@ fn count_substring_occurrences(s : String, substr : String) -> Int {
   let mut pos = 0
   let s_len = s.length()
   let sub_len = substr.length()
-  
   while pos <= s_len - sub_len {
     if s.substring(start=pos, end=pos + sub_len) == substr {
       count += 1
@@ -134,7 +129,6 @@ pub fn parse_ipv_future(s : String) -> URIResult[String] {
   if s.length() < 4 || not(s.has_prefix("v")) {
     return Err(InvalidHost("IPvFuture must start with 'v'"))
   }
-
   match s.find(".") {
     None => Err(InvalidHost("IPvFuture must contain a dot"))
     Some(dot_pos) => {
@@ -144,7 +138,7 @@ pub fn parse_ipv_future(s : String) -> URIResult[String] {
       if dot_pos == s.length() - 1 {
         return Err(InvalidHost("IPvFuture must have content after dot"))
       }
-      
+
       // Check version part (hex digits)
       let version_part = s.substring(start=1, end=dot_pos)
       for c in version_part {
@@ -152,7 +146,7 @@ pub fn parse_ipv_future(s : String) -> URIResult[String] {
           return Err(InvalidHost("IPvFuture version must be hex digits"))
         }
       }
-      
+
       // Check content part
       let content_part = s.substring(start=dot_pos + 1)
       for c in content_part {
@@ -160,7 +154,6 @@ pub fn parse_ipv_future(s : String) -> URIResult[String] {
           return Err(InvalidHost("Invalid characters in IPvFuture"))
         }
       }
-      
       Ok(s)
     }
   }

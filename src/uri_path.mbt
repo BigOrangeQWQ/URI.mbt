@@ -19,7 +19,7 @@ fn is_valid_segment_nz_nc(s : String) -> Bool {
 
 ///| Determine path type and validate
 pub fn classify_and_validate_path(
-  path : String
+  path : String,
 ) -> URIResult[(PathType, String)] {
   if path.is_empty() {
     // path-empty
@@ -119,36 +119,40 @@ pub fn normalize_path(path : String) -> String {
   if path.is_empty() {
     return path
   }
-  
   let is_absolute = path.has_prefix("/")
   let segments = (if is_absolute { path.substring(start=1) } else { path })
     .split("/")
     .map(fn(s) { s.to_string() })
     .collect()
-  
+
   // 使用函数式编程风格处理段
   let normalized_segments : Array[String] = []
-  
   for segment in segments {
     match segment {
-      "." | "" if normalized_segments.length() == 0 && is_absolute => normalized_segments.push("")
-      "." | "" => continue  // 跳过当前目录和空段
+      "." | "" if normalized_segments.length() == 0 && is_absolute =>
+        normalized_segments.push("")
+      "." | "" => continue // 跳过当前目录和空段
       ".." => {
         // 处理父目录
         let len = normalized_segments.length()
-        if len > 0 && normalized_segments[len - 1] != ".." && normalized_segments[len - 1] != "" {
+        if len > 0 &&
+          normalized_segments[len - 1] != ".." &&
+          normalized_segments[len - 1] != "" {
           ignore(normalized_segments.pop())
         } else if not(is_absolute) {
-          normalized_segments.push("..")  // 相对路径保留 ".."
+          normalized_segments.push("..") // 相对路径保留 ".."
         }
         // 绝对路径中根级别的 ".." 被忽略
       }
       _ => normalized_segments.push(segment)
     }
   }
-  
   let result = normalized_segments.join("/")
-  if is_absolute && not(result.has_prefix("/")) { "/" + result } else { result }
+  if is_absolute && not(result.has_prefix("/")) {
+    "/" + result
+  } else {
+    result
+  }
 }
 
 ///| 简化的路径连接函数
@@ -170,7 +174,11 @@ pub fn path_segments(path : String) -> Array[String] {
     "" => []
     "/" => [""]
     _ => {
-      let trimmed = if path.has_prefix("/") { path.substring(start=1) } else { path }
+      let trimmed = if path.has_prefix("/") {
+        path.substring(start=1)
+      } else {
+        path
+      }
       trimmed.split("/").map(fn(s) { s.to_string() }).collect()
     }
   }

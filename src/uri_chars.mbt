@@ -122,7 +122,7 @@ test "char classification coverage" {
   assert_eq(is_gen_delim(']'), true)
   assert_eq(is_gen_delim('@'), true)
   assert_eq(is_gen_delim('a'), false) // not a general delimiter
-  
+
   // Test is_reserved
   assert_eq(is_reserved(':'), true) // general delimiter
   assert_eq(is_reserved('!'), true) // sub-delimiter
@@ -144,7 +144,7 @@ test "hex conversion coverage" {
   assert_eq(hex_to_int('c'), Some(12))
   assert_eq(hex_to_int('E'), Some(14))
   assert_eq(hex_to_int('e'), Some(14))
-  
+
   // Test int_to_hex for all valid integers
   assert_eq(int_to_hex(7), Some('7'))
   assert_eq(int_to_hex(8), Some('8'))
@@ -153,11 +153,11 @@ test "hex conversion coverage" {
   assert_eq(int_to_hex(11), Some('B'))
   assert_eq(int_to_hex(12), Some('C'))
   assert_eq(int_to_hex(14), Some('E'))
-  
+
   // Test edge cases
   assert_eq(int_to_hex(-1), None) // negative number
   assert_eq(int_to_hex(16), None) // out of range
-  
+
   // Test the unreachable default case in int_to_hex
   // This should never be called in practice, but we want coverage
 }

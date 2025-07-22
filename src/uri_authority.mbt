@@ -1,8 +1,6 @@
 /// Authority component parsing
 /// authority = [ userinfo "@" ] host [ ":" port ]
 
-
-
 ///| Parse port number: *DIGIT
 fn parse_port(s : String) -> URIResult[Int] {
   if s.is_empty() {
@@ -95,7 +93,13 @@ pub fn parse_authority(s : String) -> URIResult[Authority] {
           // If there are multiple colons, it's likely IPv6
           let colon_count = {
             let chars = host_port.to_array()
-            chars.fold(init=0, fn(count, c) { if c == ':' { count + 1 } else { count } })
+            chars.fold(init=0, fn(count, c) {
+              if c == ':' {
+                count + 1
+              } else {
+                count
+              }
+            })
           }
           if colon_count == 1 {
             // Likely host:port
@@ -124,7 +128,7 @@ pub fn parse_authority(s : String) -> URIResult[Authority] {
 pub fn create_authority(
   userinfo : String?,
   host : HostType,
-  port : Int?
+  port : Int?,
 ) -> Authority {
   { userinfo, host, port }
 }

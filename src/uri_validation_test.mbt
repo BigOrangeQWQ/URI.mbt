@@ -139,14 +139,14 @@ test "comprehensive uri validation" {
 test "validation edge cases and error paths" {
   // Test is_valid_uri_reference with invalid reference
   assert_eq(@uri.is_valid_uri_reference("http://[::1"), false) // Invalid IPv6
-  
+
   // Test HTTP URI with invalid port range
   // We can't easily construct this through parsing, so test the concept
   match @uri.create_http_uri("example.com", Some(99999), "/", None, None) {
     Ok(_) => fail("Should not create HTTP URI with invalid port")
     Err(_) => () // Expected error
   }
-  
+
   // Test FTP URI without authority
   match @uri.create_simple_uri("ftp", "/file.txt") {
     Ok(ftp_uri) =>
@@ -156,7 +156,7 @@ test "validation edge cases and error paths" {
       }
     Err(_) => () // May fail during creation
   }
-  
+
   // Test file URI with different authority types
   let ipv4_host = @uri.make_ipv4_host("192.168.1.1")
   let file_auth = @uri.create_authority(None, ipv4_host, None)
@@ -168,7 +168,7 @@ test "validation edge cases and error paths" {
       }
     Err(_) => () // May fail during creation
   }
-  
+
   // Test file URI without authority
   match @uri.create_uri("file", None, "/path", None, None) {
     Ok(file_uri) =>
@@ -178,7 +178,7 @@ test "validation edge cases and error paths" {
       }
     Err(_) => () // May fail during creation
   }
-  
+
   // Test file URI with non-localhost hostname
   let other_host = @uri.make_reg_name_host("other.host")
   let other_auth = @uri.create_authority(None, other_host, None)
@@ -188,87 +188,113 @@ test "validation edge cases and error paths" {
         Ok(_) => () // Non-localhost hostnames are implementation-dependent
         Err(_) => () // May also be rejected
       }
-    Err(_) => () 
+    Err(_) => ()
   }
 }
 
 ///|
 test "uri equivalence edge cases" {
   // Test authorities_equivalent with both None
-  match (@uri.parse_uri("http://example.com/"), @uri.parse_uri("http://example.com/")) {
-    (Ok(uri1), Ok(uri2)) => {
+  match
+    (
+      @uri.parse_uri("http://example.com/"),
+      @uri.parse_uri("http://example.com/"),
+    ) {
+    (Ok(uri1), Ok(uri2)) =>
       // Both have authority, should be equivalent
       assert_eq(@uri.uris_equivalent(uri1, uri2), true)
-    }
     _ => ()
   }
-  
+
   // Test authorities_equivalent with mismatch (one Some, one None)
-  match (@uri.parse_uri("mailto:user@example.com"), @uri.parse_uri_reference("mailto:user@example.com")) {
-    (Ok(uri1), Ok(uri2)) => {
+  match
+    (
+      @uri.parse_uri("mailto:user@example.com"),
+      @uri.parse_uri_reference("mailto:user@example.com"),
+    ) {
+    (Ok(uri1), Ok(uri2)) =>
       // Test equivalence
       ignore(@uri.uris_equivalent(uri1, uri2))
-    }
     _ => ()
   }
-  
+
   // Test hosts_equivalent with IPv4 hosts
   let ipv4_host1 = @uri.make_ipv4_host("192.168.1.1")
   let ipv4_host2 = @uri.make_ipv4_host("192.168.1.1")
   let auth1 = @uri.create_authority(None, ipv4_host1, None)
   let auth2 = @uri.create_authority(None, ipv4_host2, None)
-  match (@uri.create_uri("http", Some(auth1), "/", None, None), @uri.create_uri("http", Some(auth2), "/", None, None)) {
-    (Ok(uri1), Ok(uri2)) => {
-      ignore(@uri.uris_equivalent(uri1, uri2))
-    }
+  match
+    (
+      @uri.create_uri("http", Some(auth1), "/", None, None),
+      @uri.create_uri("http", Some(auth2), "/", None, None),
+    ) {
+    (Ok(uri1), Ok(uri2)) => ignore(@uri.uris_equivalent(uri1, uri2))
     _ => ()
   }
-  
+
   // Test hosts_equivalent with IPv6 hosts
   let ipv6_host1 = @uri.make_ipv6_host("2001:db8::1")
   let ipv6_host2 = @uri.make_ipv6_host("2001:DB8::1") // Different case
   let auth3 = @uri.create_authority(None, ipv6_host1, None)
   let auth4 = @uri.create_authority(None, ipv6_host2, None)
-  match (@uri.create_uri("http", Some(auth3), "/", None, None), @uri.create_uri("http", Some(auth4), "/", None, None)) {
-    (Ok(uri1), Ok(uri2)) => {
+  match
+    (
+      @uri.create_uri("http", Some(auth3), "/", None, None),
+      @uri.create_uri("http", Some(auth4), "/", None, None),
+    ) {
+    (Ok(uri1), Ok(uri2)) =>
       // Should be equivalent due to case-insensitive comparison
       ignore(@uri.uris_equivalent(uri1, uri2))
-    }
     _ => ()
   }
-  
+
   // Test hosts_equivalent with IPvFuture hosts
   let ipvf_host1 = @uri.make_ipv_future_host("v1.example")
   let ipvf_host2 = @uri.make_ipv_future_host("v1.example")
   let auth5 = @uri.create_authority(None, ipvf_host1, None)
   let auth6 = @uri.create_authority(None, ipvf_host2, None)
-  match (@uri.create_uri("http", Some(auth5), "/", None, None), @uri.create_uri("http", Some(auth6), "/", None, None)) {
-    (Ok(uri1), Ok(uri2)) => {
-      ignore(@uri.uris_equivalent(uri1, uri2))
-    }
+  match
+    (
+      @uri.create_uri("http", Some(auth5), "/", None, None),
+      @uri.create_uri("http", Some(auth6), "/", None, None),
+    ) {
+    (Ok(uri1), Ok(uri2)) => ignore(@uri.uris_equivalent(uri1, uri2))
     _ => ()
   }
-  
+
   // Test hosts_equivalent with different types (mix)
   let reg_host = @uri.make_reg_name_host("example.com")
   let ipv4_host = @uri.make_ipv4_host("192.168.1.1")
   let auth7 = @uri.create_authority(None, reg_host, None)
   let auth8 = @uri.create_authority(None, ipv4_host, None)
-  match (@uri.create_uri("http", Some(auth7), "/", None, None), @uri.create_uri("http", Some(auth8), "/", None, None)) {
-    (Ok(uri1), Ok(uri2)) => {
+  match
+    (
+      @uri.create_uri("http", Some(auth7), "/", None, None),
+      @uri.create_uri("http", Some(auth8), "/", None, None),
+    ) {
+    (Ok(uri1), Ok(uri2)) =>
       // Different host types should not be equivalent
       ignore(@uri.uris_equivalent(uri1, uri2))
-    }
     _ => ()
   }
-  
+
   // Test ports_equivalent with explicit ports
-  let auth_with_port = @uri.create_authority(None, @uri.make_reg_name_host("example.com"), Some(8080))
-  let auth_with_port2 = @uri.create_authority(None, @uri.make_reg_name_host("example.com"), Some(8080))
-  match (@uri.create_uri("http", Some(auth_with_port), "/", None, None), @uri.create_uri("http", Some(auth_with_port2), "/", None, None)) {
-    (Ok(uri1), Ok(uri2)) => {
-      ignore(@uri.uris_equivalent(uri1, uri2))
-    }
+  let auth_with_port = @uri.create_authority(
+    None,
+    @uri.make_reg_name_host("example.com"),
+    Some(8080),
+  )
+  let auth_with_port2 = @uri.create_authority(
+    None,
+    @uri.make_reg_name_host("example.com"),
+    Some(8080),
+  )
+  match
+    (
+      @uri.create_uri("http", Some(auth_with_port), "/", None, None),
+      @uri.create_uri("http", Some(auth_with_port2), "/", None, None),
+    ) {
+    (Ok(uri1), Ok(uri2)) => ignore(@uri.uris_equivalent(uri1, uri2))
     _ => ()
   }
 }
@@ -277,15 +303,22 @@ test "uri equivalence edge cases" {
 test "uri structure validation" {
   // Test URI with authority but path not starting with '/'
   // This is hard to construct through normal parsing
-  let auth = @uri.create_authority(None, @uri.make_reg_name_host("example.com"), None)
+  let auth = @uri.create_authority(
+    None,
+    @uri.make_reg_name_host("example.com"),
+    None,
+  )
   match @uri.create_uri("http", Some(auth), "badpath", None, None) {
     Ok(_) => fail("Should not create URI with authority and bad path")
     Err(_) => () // Expected: "Path must be empty or start with '/' when authority is present"
   }
-  
+
   // Test URI without authority but path starting with '//'
   match @uri.create_uri("mailto", None, "//invalid", None, None) {
-    Ok(_) => fail("Should not create URI without authority and path starting with '//'")
+    Ok(_) =>
+      fail(
+        "Should not create URI without authority and path starting with '//'",
+      )
     Err(_) => () // Expected: "Path cannot start with '//' without authority"
   }
 }

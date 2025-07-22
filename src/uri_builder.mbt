@@ -6,7 +6,7 @@ pub fn create_uri(
   authority : Authority?,
   path : String,
   query : String?,
-  fragment : String?
+  fragment : String?,
 ) -> URIResult[URI] {
   // Determine path type based on context
   let path_type = match authority {
@@ -37,7 +37,7 @@ pub fn create_http_uri(
   port : Int?,
   path : String,
   query : String?,
-  fragment : String?
+  fragment : String?,
 ) -> URIResult[URI] {
   let host_type = HostType::RegName(host)
   let authority = create_authority(None, host_type, port)
@@ -50,7 +50,7 @@ pub fn create_https_uri(
   port : Int?,
   path : String,
   query : String?,
-  fragment : String?
+  fragment : String?,
 ) -> URIResult[URI] {
   let host_type = HostType::RegName(host)
   let authority = create_authority(None, host_type, port)
@@ -88,7 +88,7 @@ pub fn URIBuilder::scheme(self : URIBuilder, scheme : String) -> URIBuilder {
 ///| Set the authority
 pub fn URIBuilder::authority(
   self : URIBuilder,
-  authority : Authority
+  authority : Authority,
 ) -> URIBuilder {
   self.authority = Some(authority)
   self
@@ -139,15 +139,18 @@ pub fn URIBuilder::path(self : URIBuilder, path : String) -> URIBuilder {
 ///| 简化的路径段添加
 pub fn URIBuilder::add_path_segment(
   self : URIBuilder,
-  segment : String
+  segment : String,
 ) -> URIBuilder {
   let encoded_segment = encode_path_segment(segment)
   self.path = match (self.path.is_empty(), self.authority) {
-    (true, Some(_)) => "/" + encoded_segment  // 有权威时以 / 开头
-    (true, None) => encoded_segment           // 无权威时直接添加
-    (false, _) => 
-      if self.path.has_suffix("/") { self.path + encoded_segment } 
-      else { self.path + "/" + encoded_segment }
+    (true, Some(_)) => "/" + encoded_segment // 有权威时以 / 开头
+    (true, None) => encoded_segment // 无权威时直接添加
+    (false, _) =>
+      if self.path.has_suffix("/") {
+        self.path + encoded_segment
+      } else {
+        self.path + "/" + encoded_segment
+      }
   }
   self
 }
@@ -161,7 +164,7 @@ pub fn URIBuilder::query(self : URIBuilder, query : String) -> URIBuilder {
 ///| Set query parameters
 pub fn URIBuilder::query_params(
   self : URIBuilder,
-  params : Array[(String, String)]
+  params : Array[(String, String)],
 ) -> URIBuilder {
   let query_string = build_query_string(params)
   self.query = if query_string.is_empty() { None } else { Some(query_string) }
@@ -172,14 +175,13 @@ pub fn URIBuilder::query_params(
 pub fn URIBuilder::add_query_param(
   self : URIBuilder,
   key : String,
-  value : String
+  value : String,
 ) -> URIBuilder {
-  let param = if value.is_empty() { 
-    encode_query(key) 
-  } else { 
-    encode_query(key) + "=" + encode_query(value) 
+  let param = if value.is_empty() {
+    encode_query(key)
+  } else {
+    encode_query(key) + "=" + encode_query(value)
   }
-  
   self.query = match self.query {
     Some(existing) => Some(existing + "&" + param)
     None => Some(param)
@@ -202,7 +204,11 @@ pub fn URIBuilder::build(self : URIBuilder) -> URIResult[URI] {
 pub fn uri_to_string(uri : URI) -> String {
   let parts = [
     // scheme
-    if uri.scheme.is_empty() { "" } else { uri.scheme + ":" },
+    if uri.scheme.is_empty() {
+      ""
+    } else {
+      uri.scheme + ":"
+    },
     // authority
     match uri.authority {
       Some(auth) => "//" + authority_to_string(auth)
@@ -219,7 +225,7 @@ pub fn uri_to_string(uri : URI) -> String {
     match uri.fragment {
       Some(f) => "#" + f
       None => ""
-    }
+    },
   ]
   parts.join("")
 }
